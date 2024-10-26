@@ -8,22 +8,20 @@ const sequelize = new Sequelize('database', 'user', 'password', {
 	storage: 'database.sqlite',
 });
 
-const challenges = sequelize.define('challenges', {
-	name: {
-		type: Sequelize.STRING,
-		unique: true,
-	},
+const Challenges = sequelize.define('challenges', {
+	name: Sequelize.TEXT,
 	description: Sequelize.TEXT,
 	timeframe: Sequelize.TEXT,
-	username: Sequelize.STRING,
+	username: Sequelize.TEXT,
+	userid: Sequelize.NUMBER,
 	cheats: {
 		type: Sequelize.NUMBER,
 		defaultValue: 0
-	} ,
+	},
 	allowpause: {
-		type: Sequelize.TEXT,
+		type: Sequelize.BOOLEAN,
 		defaultValue: false
 	} 
 });
 
-module.exports = { challenges }
+module.exports = { Challenges }

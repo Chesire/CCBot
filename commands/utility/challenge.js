@@ -1,4 +1,6 @@
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder, SlashCommandBuilder } = require('discord.js');
+const challengedb = require('../../db/challengedb');
+const { name } = require('../../events/ready');
 
 const data = new SlashCommandBuilder()
     .setName("challenge")
@@ -7,8 +9,16 @@ const data = new SlashCommandBuilder()
         subCommand
             .setName("add")
             .setDescription("Adds a challenge for a user")
+			.addStringOption(option =>
+				option
+					.setName('name')
+					.setDescription('Give the challenge a short name')
+					.setMaxLength(20)
+					.setRequired(true)
+			)
 	    	.addStringOption(option =>
-			    option.setName('description')
+				option
+					.setName('description')
 					.setDescription('Description of the challenge being done')
 					.setMaxLength(200)
 					.setRequired(true))
@@ -64,23 +74,58 @@ const data = new SlashCommandBuilder()
 					.setRequired(true)))
 	
 async function addChallenge(interaction) {
+	const name = interaction.options.getString('name')
 	const description = interaction.options.getString('description')
 	const timeFrame = interaction.options.getString('time-frame')
 	const cheats = interaction.options.getNumber('cheats')
 	const allowPause = interaction.options.getBoolean('allow-pause')
-	await interaction.reply(`${interaction.user.displayName} is adding a challenge.\nThey will do "${description}" every ${timeFrame}`);
+
+	try {
+		await challengedb.Challenges.create({
+			name: name,
+			description: description,
+			timeframe: timeFrame,
+			username: interaction.user.displayName,
+			userid: interaction.user.id,
+			cheats: cheats,
+			allowpause: allowPause
+		})
+		await interaction.reply(`<@${interaction.user.id}> is adding a challenge.\nThey will do "${description}" every ${timeFrame}`);
+	} catch (error) {
+		await interaction.reply(`@${interaction.user.id} tried to add a challenge, but an error occurred. ${error}`);
+	}
 }
 
 async function listAllChallenges(interaction) {
-	await interaction.reply(`In list all challenge`);
+	const challenges = await challengedb.Challenges.findAll();
+	if (challenges) {
+		const challengesString = challenges.map(c =>
+			`${c.id}: <@${c.userid}> : ${c.description}`
+		).join('\n');
+
+		await interaction.reply(`All current challenges are:\n${challengesString}`);
+	} else {
+		await interaction.reply(`Could not find any challenges`);
+	}
 }
 
 async function listMyChallenges(interaction) {
-	await interaction.reply(`In list my challenge`);
+	// maybe could use the buttons to show all the challenges, then clicking will show more details.
+	const target = interaction.options.getUser('target')
+	const challenges = await challengedb.Challenges.findAll({ where: { userid: target.id } });
+	if (challenges) {
+		const challengesString = challenges.map(t => t.id).join('\n');
+
+		await interaction.reply(`Current challenges are:\n${challengesString}`);
+	} else {
+		await interaction.reply(`Could not find any challenges for your user`);
+	}
 }
 
 async function removeChallenge(interaction) {
 	await interaction.reply(`In remove challenge`);
+	// show buttons for each of the current users challenges.
+	// on click add option to delete (or just delete it)
 }
 
 module.exports = { 
