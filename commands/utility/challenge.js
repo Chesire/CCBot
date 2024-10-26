@@ -1,4 +1,5 @@
-const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder, SlashCommandBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, SlashCommandBuilder } = require('discord.js');
+
 const challengedb = require('../../db/challengedb');
 const { name } = require('../../events/ready');
 
@@ -109,16 +110,40 @@ async function listAllChallenges(interaction) {
 	}
 }
 
-async function listMyChallenges(interaction) {
-	// maybe could use the buttons to show all the challenges, then clicking will show more details.
+async function listUserChallenges(interaction) {
 	const target = interaction.options.getUser('target')
 	const challenges = await challengedb.Challenges.findAll({ where: { userid: target.id } });
 	if (challenges) {
-		const challengesString = challenges.map(t => t.id).join('\n');
+		const buttons = challenges.map(c => 
+			new ButtonBuilder()
+				.setCustomId(c.id.toString())
+				.setLabel(c.name)
+				.setStyle(ButtonStyle.Secondary)
+		)
 
-		await interaction.reply(`Current challenges are:\n${challengesString}`);
+		const row = new ActionRowBuilder()
+			.addComponents(buttons);
+
+		const response = await interaction.reply({
+			content: `Current challenges for ${target}`,
+			components: [row]
+		});
+		const collectorFilter = i => i.user.id === interaction.user.id;
+
+		try {
+			const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+			const challenge = await challengedb.Challenges.findOne({ where: { id: parseInt(confirmation.customId) } })
+			if (challenge) {
+				await confirmation.update({
+					content: `${challenge.id}: ${challenge.name} - ${challenge.description}`,
+					components: []
+				})
+			}
+		} catch (e) {
+			await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+		}
 	} else {
-		await interaction.reply(`Could not find any challenges for your user`);
+		await interaction.reply(`Could not find any challenges for that user`);
 	}
 }
 
@@ -137,7 +162,7 @@ module.exports = {
         } else if (interaction.options.getSubcommand() === "list-all") {
             listAllChallenges(interaction)
         } else if (interaction.options.getSubcommand() === "list-user") {
-            listMyChallenges(interaction)
+            listUserChallenges(interaction)
         } else if (interaction.options.getSubcommand() === "remove") {
             removeChallenge(interaction)
 		} else {
