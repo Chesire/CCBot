@@ -11,6 +11,13 @@ const data = new SlashCommandBuilder()
                 option
                     .setName('target')
                     .setDescription('The user')
+                    .setRequired(true),
+            )
+            .addStringOption(option =>
+                option
+                    .setName('testing')
+                    .setDescription('testing2')
+                    .setRequired(true)
             )
     )
     .addSubcommand(subCommand =>
