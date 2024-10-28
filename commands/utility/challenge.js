@@ -1,6 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-
 const challengedb = require('../../db/challengedb');
+
+const challengeLimit = 5;
 
 const data = new SlashCommandBuilder()
     .setName('challenge')
@@ -32,7 +33,7 @@ const data = new SlashCommandBuilder()
 						{ name: 'Daily', value: 'daily' },
 						{ name: 'Weekly', value: 'weekly' },
 						{ name: 'Monthly', value: 'monthly' }
-				)
+					)
 			)
 			.addNumberOption(option =>
 				option
@@ -93,17 +94,21 @@ async function addChallenge(interaction) {
 	const allowPause = interaction.options.getBoolean('allow-pause');
 
 	try {
-		// Check how many are currently there, we want to limit to something like 5
-		await challengedb.Challenges.create({
-			name: name,
-			description: description,
-			timeframe: timeFrame,
-			username: interaction.user.displayName,
-			userid: interaction.user.id,
-			cheats: cheats,
-			allowpause: allowPause
-		});
-		await interaction.reply(`<@${interaction.user.id}> is adding a challenge.\nThey will do '${description}' every ${timeFrame}`);
+		const usersChallenges = await challengedb.Challenges.findAll({ where: { userid: interaction.user.id } });
+		if (usersChallenges.length >= challengeLimit) {
+			await interaction.reply('Too many challenges active, delete one to add another.');
+		} else {
+			await challengedb.Challenges.create({
+				name: name,
+				description: description,
+				timeframe: timeFrame,
+				username: interaction.user.displayName,
+				userid: interaction.user.id,
+				cheats: cheats,
+				allowpause: allowPause
+			});
+			await interaction.reply(`<@${interaction.user.id}> is adding a challenge.\nThey will do '${description}' every ${timeFrame}`);
+		}
 	} catch (error) {
 		await interaction.reply(`@${interaction.user.id} tried to add a challenge, but an error occurred. ${error}`);
 	}
