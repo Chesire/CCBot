@@ -1,29 +1,63 @@
 const { Events } = require('discord.js');
 const cron = require('cron');
 const token = require('../config.json');
+const challengedb = require('../db/challengedb');
 
 async function fireDailyCron(client) {
+	console.log('Starting day cron');
 	const guildId = token.guildId;
 	const channelId = token.cronChannelId;
 
 	const guild = client.guilds.cache.get(guildId);
 	const channel = guild.channels.cache.get(channelId);
+
+	const challenges = await challengedb.Challenges.findAll({ where: { timeframe: 'daily' } });
+	console.log(`Found ${challenges.length} challenges`);
+	if (challenges.length > 0) {
+		const challengesString = challenges.map(c =>
+			`<@${c.userid}>, did you complete your ${c.name} challenge yesterday?`
+		).join('\n');
+
+		await channel.send(`${challengesString}`);
+	}
 }
 
 async function fireWeeklyCron(client) {
+	console.log('Starting week cron');
 	const guildId = token.guildId;
 	const channelId = token.cronChannelId;
 
 	const guild = client.guilds.cache.get(guildId);
 	const channel = guild.channels.cache.get(channelId);
+
+	const challenges = await challengedb.Challenges.findAll({ where: { timeframe: 'weekly' } });
+	console.log(`Found ${challenges.length} challenges`);
+	if (challenges.length > 0) {
+		const challengesString = challenges.map(c =>
+			`<@${c.userid}>, did you complete your ${c.name} challenge last week?`
+		).join('\n');
+
+		await channel.send(`${challengesString}`);
+	}
 }
 
 async function fireMonthlyCron(client) {
+	console.log('Starting month cron');
 	const guildId = token.guildId;
 	const channelId = token.cronChannelId;
 
 	const guild = client.guilds.cache.get(guildId);
 	const channel = guild.channels.cache.get(channelId);
+
+	const challenges = await challengedb.Challenges.findAll({ where: { timeframe: 'monthly' } });
+	console.log(`Found ${challenges.length} challenges`);
+	if (challenges.length > 0) {
+		const challengesString = challenges.map(c =>
+			`<@${c.userid}>, did you complete your ${c.name} challenge last month?`
+		).join('\n');
+
+		await channel.send(`${challengesString}`);
+	}
 }
 
 module.exports = {
@@ -44,7 +78,6 @@ module.exports = {
 			fireMonthlyCron(client);
 		});
 
-        // When you want to start it, use:
         dailyMessage.start();
 		weeklyMessage.start();
 		monthlyMessage.start();

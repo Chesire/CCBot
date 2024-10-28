@@ -116,7 +116,7 @@ async function addChallenge(interaction) {
 
 async function listAllChallenges(interaction) {
 	const challenges = await challengedb.Challenges.findAll();
-	if (challenges) {
+	if (challenges.length > 0) {
 		const challengesString = challenges.map(c =>
 			`${c.id}: <@${c.userid}> - ${c.name} - ${c.description}`
 		).join('\n');
@@ -130,7 +130,7 @@ async function listAllChallenges(interaction) {
 async function listUserChallenges(interaction) {
 	const target = interaction.options.getUser('target');
 	const challenges = await challengedb.Challenges.findAll({ where: { userid: target.id } });
-	if (challenges) {
+	if (challenges.length > 0) {
 		const buttons = challenges.map(c =>
 			new ButtonBuilder()
 				.setCustomId(c.id.toString())
@@ -167,7 +167,7 @@ async function listUserChallenges(interaction) {
 async function removeChallenge(interaction) {
 	const targetUser = interaction.user;
 	const challenges = await challengedb.Challenges.findAll({ where: { userid: targetUser.id } });
-	if (challenges) {
+	if (challenges.length > 0) {
 		const buttons = challenges.map(c =>
 			new ButtonBuilder()
 				.setCustomId(c.id.toString())
