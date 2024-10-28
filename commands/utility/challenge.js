@@ -133,9 +133,7 @@ async function addChallenge(interaction) {
 async function listAllChallenges(interaction) {
 	const challenges = await challengedb.Challenges.findAll();
 	if (challenges.length > 0) {
-		const challengesString = challenges.map(c =>
-			`<@${c.userid}> - ${c.name} - ${c.description}`
-		).join('\n');
+		const challengesString = challenges.map(c => `<@${c.username}> - ${c.name} - ${c.description}`).join('\n');
 
 		await interaction.reply(`All current challenges are:\n${challengesString}`);
 	} else {
