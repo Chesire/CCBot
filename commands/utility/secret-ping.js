@@ -7,5 +7,5 @@ module.exports = {
 		.setDescription('Secretly replies with Pong!'),
 	async execute(interaction) {
 		await interaction.reply({ content: 'Secret Pong!', ephemeral: true });
-	}, 
+	}
 };

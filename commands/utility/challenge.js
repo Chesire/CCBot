@@ -1,15 +1,14 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, SlashCommandBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
 
 const challengedb = require('../../db/challengedb');
-const { name } = require('../../events/ready');
 
 const data = new SlashCommandBuilder()
-    .setName("challenge")
-    .setDescription("Interact with challenges")
+    .setName('challenge')
+    .setDescription('Interact with challenges')
     .addSubcommand(subCommand =>
         subCommand
-            .setName("add")
-            .setDescription("Adds a challenge for a user")
+            .setName('add')
+            .setDescription('Adds a challenge for a user')
 			.addStringOption(option =>
 				option
 					.setName('name')
@@ -22,7 +21,8 @@ const data = new SlashCommandBuilder()
 					.setName('description')
 					.setDescription('Description of the challenge being done')
 					.setMaxLength(200)
-					.setRequired(true))
+					.setRequired(true)
+			)
 			.addStringOption(option =>
 				option
 					.setName('time-frame')
@@ -32,56 +32,68 @@ const data = new SlashCommandBuilder()
 						{ name: 'Daily', value: 'daily' },
 						{ name: 'Weekly', value: 'weekly' },
 						{ name: 'Monthly', value: 'monthly' }
-				))
+				)
+			)
 			.addNumberOption(option =>
 				option
 					.setName('cheats')
 					.setDescription('How many cheat days are allowed in each time window?')
 					.setMinValue(0)
-					.setMaxValue(4))
+					.setMaxValue(4)
+			)
 			.addBooleanOption(option =>
 				option
 					.setName('allow-pause')
-					.setDescription("Are pauses allowed for special occasions?")))
+					.setDescription('Are pauses allowed for special occasions?')
+			)
+	)
 	.addSubcommand(subCommand =>
         subCommand
-            .setName("list-all")
-			.setDescription("Lists all users challenges"))
+            .setName('list-all')
+			.setDescription('Lists all users challenges')
+	)
 	.addSubcommand(subCommand =>
         subCommand
-            .setName("list-user")
-			.setDescription("Lists users challenges")
+            .setName('list-user')
+			.setDescription('Lists users challenges')
             .addUserOption(option =>
                 option
                     .setName('target')
                     .setDescription('The user')
-                    .setRequired(true)))
+                    .setRequired(true)
+			)
+	)
 	.addSubcommand(subCommand =>
 		subCommand
 			.setName('remove')
-			.setDescription('Removes a challenge from a user'))
+			.setDescription('Removes a challenge from a user')
+	)
 	.addSubcommand(subCommand =>
 		subCommand
 			.setName('cheat')
-			.setDescription('Sets that today is a cheat day'))
+			.setDescription('Sets that today is a cheat day')
+	)
 	.addSubcommand(subCommand =>
 		subCommand
 			.setName('pause')
 			.setDescription('Sets a date for a pause day')
-			.addStringOption(option => 
+			.addStringOption(option =>
 				option
-					.setName("reason")
-					.setDescription("Why the pause")
-					.setRequired(true)))
-	
+					.setName('reason')
+					.setDescription('Why the pause')
+					.setRequired(true)
+			)
+	);
+
 async function addChallenge(interaction) {
-	const name = interaction.options.getString('name')
-	const description = interaction.options.getString('description')
-	const timeFrame = interaction.options.getString('time-frame')
-	const cheats = interaction.options.getNumber('cheats')
-	const allowPause = interaction.options.getBoolean('allow-pause')
+	const name = interaction.options.getString('name');
+	const description = interaction.options.getString('description');
+	const timeFrame = interaction.options.getString('time-frame');
+	const cheats = interaction.options.getNumber('cheats');
+	const allowPause = interaction.options.getBoolean('allow-pause');
 
 	try {
+		// Check how many are currently there, we want to limit to something like 5
 		await challengedb.Challenges.create({
 			name: name,
 			description: description,
@@ -90,8 +102,8 @@ async function addChallenge(interaction) {
 			userid: interaction.user.id,
 			cheats: cheats,
 			allowpause: allowPause
-		})
-		await interaction.reply(`<@${interaction.user.id}> is adding a challenge.\nThey will do "${description}" every ${timeFrame}`);
+		});
+		await interaction.reply(`<@${interaction.user.id}> is adding a challenge.\nThey will do '${description}' every ${timeFrame}`);
 	} catch (error) {
 		await interaction.reply(`@${interaction.user.id} tried to add a challenge, but an error occurred. ${error}`);
 	}
@@ -106,20 +118,20 @@ async function listAllChallenges(interaction) {
 
 		await interaction.reply(`All current challenges are:\n${challengesString}`);
 	} else {
-		await interaction.reply(`Could not find any challenges`);
+		await interaction.reply('Could not find any challenges');
 	}
 }
 
 async function listUserChallenges(interaction) {
-	const target = interaction.options.getUser('target')
+	const target = interaction.options.getUser('target');
 	const challenges = await challengedb.Challenges.findAll({ where: { userid: target.id } });
 	if (challenges) {
-		const buttons = challenges.map(c => 
+		const buttons = challenges.map(c =>
 			new ButtonBuilder()
 				.setCustomId(c.id.toString())
 				.setLabel(c.name)
 				.setStyle(ButtonStyle.Secondary)
-		)
+		);
 
 		const row = new ActionRowBuilder()
 			.addComponents(buttons);
@@ -132,41 +144,41 @@ async function listUserChallenges(interaction) {
 
 		try {
 			const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
-			const challenge = await challengedb.Challenges.findOne({ where: { id: parseInt(confirmation.customId) } })
+			const challenge = await challengedb.Challenges.findOne({ where: { id: parseInt(confirmation.customId) } });
 			if (challenge) {
 				await confirmation.update({
 					content: `${challenge.id}: ${challenge.name} - ${challenge.description}`,
 					components: []
-				})
+				});
 			}
-		} catch (e) {
+		} catch {
 			await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
 		}
 	} else {
-		await interaction.reply(`Could not find any challenges for that user`);
+		await interaction.reply('Could not find any challenges for that user');
 	}
 }
 
 async function removeChallenge(interaction) {
-	await interaction.reply(`In remove challenge`);
+	await interaction.reply('In remove challenge');
 	// show buttons for each of the current users challenges.
 	// on click add option to delete (or just delete it)
 }
 
-module.exports = { 
+module.exports = {
 	cooldown: 5,
 	data: data,
     async execute(interaction) {
-        if (interaction.options.getSubcommand() === "add") {
-            addChallenge(interaction)
-        } else if (interaction.options.getSubcommand() === "list-all") {
-            listAllChallenges(interaction)
-        } else if (interaction.options.getSubcommand() === "list-user") {
-            listUserChallenges(interaction)
-        } else if (interaction.options.getSubcommand() === "remove") {
-            removeChallenge(interaction)
+        if (interaction.options.getSubcommand() === 'add') {
+            addChallenge(interaction);
+        } else if (interaction.options.getSubcommand() === 'list-all') {
+            listAllChallenges(interaction);
+        } else if (interaction.options.getSubcommand() === 'list-user') {
+            listUserChallenges(interaction);
+        } else if (interaction.options.getSubcommand() === 'remove') {
+            removeChallenge(interaction);
 		} else {
-			await interaction.reply('NYI')
+			await interaction.reply('NYI');
 		}
 	}
-}; 
+};

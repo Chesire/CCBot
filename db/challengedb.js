@@ -21,7 +21,7 @@ const Challenges = sequelize.define('challenges', {
 	allowpause: {
 		type: Sequelize.BOOLEAN,
 		defaultValue: false
-	} 
+	}
 });
 
-module.exports = { Challenges }
+module.exports = { Challenges };

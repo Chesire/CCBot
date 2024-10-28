@@ -1,17 +1,17 @@
 const { SlashCommandBuilder } = require('discord.js');
 
 const data = new SlashCommandBuilder()
-    .setName("info")
-    .setDescription("Get information about a user or server")
+    .setName('info')
+    .setDescription('Get information about a user or server')
     .addSubcommand(subCommand =>
         subCommand
-            .setName("user")
-            .setDescription("Get information about a user")
+            .setName('user')
+            .setDescription('Get information about a user')
             .addUserOption(option =>
                 option
                     .setName('target')
                     .setDescription('The user')
-                    .setRequired(true),
+                    .setRequired(true)
             )
             .addStringOption(option =>
                 option
@@ -22,9 +22,9 @@ const data = new SlashCommandBuilder()
     )
     .addSubcommand(subCommand =>
         subCommand
-            .setName("server")
-            .setDescription("Get information about the server")
-    )
+            .setName('server')
+            .setDescription('Get information about the server')
+    );
 
 async function handleUserSubcommand(interaction) {
     const user = interaction.options.getUser('target');
@@ -39,10 +39,10 @@ module.exports = {
 	cooldown: 5,
 	data: data,
     async execute(interaction) {
-        if (interaction.options.getSubcommand() === "user") {
-            handleUserSubcommand(interaction)
-        } else if (interaction.options.getSubcommand() === "server") {
-            handleServerSubCommand(interaction)
+        if (interaction.options.getSubcommand() === 'user') {
+            handleUserSubcommand(interaction);
+        } else if (interaction.options.getSubcommand() === 'server') {
+            handleServerSubCommand(interaction);
         }
 	},
 };
