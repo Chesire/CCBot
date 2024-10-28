@@ -6,7 +6,7 @@ const challengedb = require('../db/challengedb');
 async function fireDailyCron(client) {
 	console.log('Starting day cron');
 	const guildId = token.guildId;
-	const channelId = token.cronChannelId;
+	const channelId = token.challengeChannelId;
 
 	const guild = client.guilds.cache.get(guildId);
 	const channel = guild.channels.cache.get(channelId);
@@ -25,7 +25,7 @@ async function fireDailyCron(client) {
 async function fireWeeklyCron(client) {
 	console.log('Starting week cron');
 	const guildId = token.guildId;
-	const channelId = token.cronChannelId;
+	const channelId = token.challengeChannelId;
 
 	const guild = client.guilds.cache.get(guildId);
 	const channel = guild.channels.cache.get(channelId);
@@ -44,7 +44,7 @@ async function fireWeeklyCron(client) {
 async function fireMonthlyCron(client) {
 	console.log('Starting month cron');
 	const guildId = token.guildId;
-	const channelId = token.cronChannelId;
+	const channelId = token.challengeChannelId;
 
 	const guild = client.guilds.cache.get(guildId);
 	const channel = guild.channels.cache.get(channelId);

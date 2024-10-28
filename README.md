@@ -16,6 +16,7 @@ config.json
 {
     "token": "",
     "clientId": "",
-    "guildId": ""
+    "guildId": "",
+    "challengeChannelId": ""
 }
 ```
