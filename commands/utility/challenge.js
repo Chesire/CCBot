@@ -38,14 +38,16 @@ const data = new SlashCommandBuilder()
 			.addNumberOption(option =>
 				option
 					.setName('cheats')
-					.setDescription('How many cheat days are allowed in each time window?')
+					.setDescription('How many cheat days are allowed in each time frame?')
 					.setMinValue(0)
 					.setMaxValue(4)
+					.setRequired(true)
 			)
 			.addBooleanOption(option =>
 				option
 					.setName('allow-pause')
 					.setDescription('Are pauses allowed for special occasions?')
+					.setRequired(true)
 			)
 	)
 	.addSubcommand(subCommand =>
@@ -107,10 +109,24 @@ async function addChallenge(interaction) {
 				cheats: cheats,
 				allowpause: allowPause
 			});
-			await interaction.reply(`<@${interaction.user.id}> is adding a challenge.\nThey will do '${description}' every ${timeFrame}`);
+			let timeString = 'day';
+			if (timeFrame === 'daily') {
+				timeString = 'day';
+			} else if (timeFrame === 'weekly') {
+				timeString = 'week';
+			} else if (timeFrame === 'monthly') {
+				timeString = 'month';
+			}
+			await interaction.reply(
+				`<@${interaction.user.id}> is adding a new challenge.\n\n
+				Every ${timeString} they will do '${description}'\n
+				They will ${allowPause ? '' : 'not' } allow pauses\n
+				They are allowing ${cheats} per ${timeString}`
+			);
 		}
 	} catch (error) {
-		await interaction.reply(`<@${interaction.user.id}> tried to add a challenge, but an error occurred. ${error}`);
+		console.log(`<@${interaction.user.id}> tried to add a challenge, but an error occurred. ${error}`);
+		await interaction.reply('Failed to add a challenge, try again');
 	}
 }
 
@@ -118,7 +134,7 @@ async function listAllChallenges(interaction) {
 	const challenges = await challengedb.Challenges.findAll();
 	if (challenges.length > 0) {
 		const challengesString = challenges.map(c =>
-			`${c.id}: <@${c.userid}> - ${c.name} - ${c.description}`
+			`<@${c.userid}> - ${c.name} - ${c.description}`
 		).join('\n');
 
 		await interaction.reply(`All current challenges are:\n${challengesString}`);
