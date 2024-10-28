@@ -110,7 +110,7 @@ async function addChallenge(interaction) {
 			await interaction.reply(`<@${interaction.user.id}> is adding a challenge.\nThey will do '${description}' every ${timeFrame}`);
 		}
 	} catch (error) {
-		await interaction.reply(`@${interaction.user.id} tried to add a challenge, but an error occurred. ${error}`);
+		await interaction.reply(`<@${interaction.user.id}> tried to add a challenge, but an error occurred. ${error}`);
 	}
 }
 
@@ -118,7 +118,7 @@ async function listAllChallenges(interaction) {
 	const challenges = await challengedb.Challenges.findAll();
 	if (challenges) {
 		const challengesString = challenges.map(c =>
-			`${c.id}: <@${c.userid}> : ${c.description}`
+			`${c.id}: <@${c.userid}> - ${c.name} - ${c.description}`
 		).join('\n');
 
 		await interaction.reply(`All current challenges are:\n${challengesString}`);
@@ -165,9 +165,41 @@ async function listUserChallenges(interaction) {
 }
 
 async function removeChallenge(interaction) {
-	await interaction.reply('In remove challenge');
-	// show buttons for each of the current users challenges.
-	// on click add option to delete (or just delete it)
+	const targetUser = interaction.user;
+	const challenges = await challengedb.Challenges.findAll({ where: { userid: targetUser.id } });
+	if (challenges) {
+		const buttons = challenges.map(c =>
+			new ButtonBuilder()
+				.setCustomId(c.id.toString())
+				.setLabel(c.name)
+				.setStyle(ButtonStyle.Secondary)
+		);
+
+		const row = new ActionRowBuilder()
+			.addComponents(buttons);
+
+		const response = await interaction.reply({
+			content: `Current challenges for ${targetUser}`,
+			components: [row]
+		});
+		const collectorFilter = i => i.user.id === interaction.user.id;
+
+		try {
+			const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+			const challenge = await challengedb.Challenges.findOne({ where: { id: parseInt(confirmation.customId) } });
+			if (challenge) {
+				await challengedb.Challenges.destroy({ where: { id: parseInt(confirmation.customId) } });
+				await confirmation.update({
+					content: `Challenge ${confirmation.customId} successfully deleted`,
+					components: []
+				});
+			}
+		} catch {
+			await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+		}
+	} else {
+		await interaction.reply('Could not find any challenges for that user');
+	}
 }
 
 module.exports = {
