@@ -5,7 +5,8 @@ module.exports = {
 	name: Events.ClientReady,
 	once: true,
 	execute(client) {
+		console.log(`${client.user.tag} ready. Syncing DB!`);
 		challengedb.Challenges.sync();
-		console.log(`Ready! Logged in as ${client.user.tag}`);
+		console.log('DB Synced!');
 	}
 };
