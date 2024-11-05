@@ -216,18 +216,26 @@ async function removeChallenge(interaction) {
 	}
 }
 
+async function cheatDay(interaction) {
+	const targetUser = interaction.user;
+	await interaction.reply(`${targetUser} is taking today as a cheat day.`);
+}
+
 module.exports = {
 	cooldown: 5,
 	data: data,
     async execute(interaction) {
-        if (interaction.options.getSubcommand() === 'add') {
+		const subCommand = interaction.options.getSubcommand();
+        if (subCommand === 'add') {
             addChallenge(interaction);
-        } else if (interaction.options.getSubcommand() === 'list-all') {
+        } else if (subCommand === 'list-all') {
             listAllChallenges(interaction);
-        } else if (interaction.options.getSubcommand() === 'list-user') {
+        } else if (subCommand === 'list-user') {
             listUserChallenges(interaction);
-        } else if (interaction.options.getSubcommand() === 'remove') {
+        } else if (subCommand === 'remove') {
             removeChallenge(interaction);
+		} else if (subCommand === 'cheat') {
+			cheatDay(interaction);
 		} else {
 			await interaction.reply('NYI');
 		}
