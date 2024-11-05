@@ -14,8 +14,11 @@ When ready to deploy to correct server, change the `guildId` in `config.json`.
 ```javascript
 config.json
 {
+    // This is the token for the bot itself, from discord.
     "token": "",
+    // The bots clientId, from discord.
     "clientId": "",
+    // Id of the guild this will attach to.
     "guildId": ""
 }
 ```
