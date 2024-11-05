@@ -105,7 +105,7 @@ async function addChallenge(interaction) {
 				description: description,
 				timeframe: timeFrame,
 				username: interaction.user.displayName,
-				userid: interaction.user.id,
+				userid: interaction.user.id.toString(),
 				cheats: cheats,
 				allowpause: allowPause
 			});
@@ -117,12 +117,7 @@ async function addChallenge(interaction) {
 			} else if (timeFrame === 'monthly') {
 				timeString = 'month';
 			}
-			await interaction.reply(
-				`<@${interaction.user.id}> is adding a new challenge.\n\n
-				Every ${timeString} they will do '${description}'\n
-				They will ${allowPause ? '' : 'not' } allow pauses\n
-				They are allowing ${cheats} cheats per ${timeString}.`
-			);
+			await interaction.reply(`<@${interaction.user.id}> is adding a new challenge.\nEvery ${timeString} they will do '${description}'\nThey will ${allowPause ? '' : 'not' } allow pauses\nThey are allowing ${cheats} cheats per ${timeString}.`);
 		}
 	} catch (error) {
 		console.log(`<@${interaction.user.id}> tried to add a challenge, but an error occurred. ${error}`);
@@ -133,7 +128,7 @@ async function addChallenge(interaction) {
 async function listAllChallenges(interaction) {
 	const challenges = await challengedb.Challenges.findAll();
 	if (challenges.length > 0) {
-		const challengesString = challenges.map(c => `<@${c.username}> - ${c.name} - ${c.description}`).join('\n');
+		const challengesString = challenges.map(c => `<@${c.userid}> - ${c.name} - ${c.description}`).join('\n');
 
 		await interaction.reply(`All current challenges are:\n${challengesString}`);
 	} else {

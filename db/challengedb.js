@@ -13,7 +13,7 @@ const Challenges = sequelize.define('challenges', {
 	description: Sequelize.TEXT,
 	timeframe: Sequelize.TEXT,
 	username: Sequelize.TEXT,
-	userid: Sequelize.NUMBER,
+	userid: Sequelize.TEXT,
 	cheats: {
 		type: Sequelize.NUMBER,
 		defaultValue: 0
