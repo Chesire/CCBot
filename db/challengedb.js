@@ -1,11 +1,11 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('database', 'user', 'password', {
+const sequelize = new Sequelize('challengedb', 'user', 'password', {
 	host: 'localhost',
 	dialect: 'sqlite',
 	logging: false,
 	// SQLite only
-	storage: 'database.sqlite',
+	storage: 'challengedb.sqlite',
 });
 
 const Challenges = sequelize.define('challenges', {
