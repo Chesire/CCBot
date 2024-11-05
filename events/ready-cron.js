@@ -1,17 +1,20 @@
 const { Events } = require('discord.js');
 const cron = require('cron');
 const token = require('../config.json');
+const admindb = require('../db/admindb');
 const challengedb = require('../db/challengedb');
 
 async function fireDailyCron(client) {
 	console.log('Starting day cron');
-	const guildId = token.guildId;
-	const channelId = token.challengeChannelId;
+	const db = await admindb.Admin.findOne({ where: { singleid: 0 } });
+	if (!db) {
+		return;
+	}
 
-	const guild = client.guilds.cache.get(guildId);
-	const channel = guild.channels.cache.get(channelId);
-
+	const guild = await client.guilds.cache.get(token.guildId);
+	const channel = await guild.channels.cache.get(db.challengechannelid);
 	const challenges = await challengedb.Challenges.findAll({ where: { timeframe: 'daily' } });
+
 	console.log(`Found ${challenges.length} challenges`);
 	if (challenges.length > 0) {
 		const challengesString = challenges.map(c =>
@@ -24,13 +27,15 @@ async function fireDailyCron(client) {
 
 async function fireWeeklyCron(client) {
 	console.log('Starting week cron');
-	const guildId = token.guildId;
-	const channelId = token.challengeChannelId;
+	const db = await admindb.Admin.findOne({ where: { singleid: 0 } });
+	if (!db) {
+		return;
+	}
 
-	const guild = client.guilds.cache.get(guildId);
-	const channel = guild.channels.cache.get(channelId);
-
+	const guild = await client.guilds.cache.get(token.guildId);
+	const channel = await guild.channels.cache.get(db.challengechannelid);
 	const challenges = await challengedb.Challenges.findAll({ where: { timeframe: 'weekly' } });
+
 	console.log(`Found ${challenges.length} challenges`);
 	if (challenges.length > 0) {
 		const challengesString = challenges.map(c =>
@@ -43,13 +48,15 @@ async function fireWeeklyCron(client) {
 
 async function fireMonthlyCron(client) {
 	console.log('Starting month cron');
-	const guildId = token.guildId;
-	const channelId = token.challengeChannelId;
+	const db = await admindb.Admin.findOne({ where: { singleid: 0 } });
+	if (!db) {
+		return;
+	}
 
-	const guild = client.guilds.cache.get(guildId);
-	const channel = guild.channels.cache.get(channelId);
-
+	const guild = await client.guilds.cache.get(token.guildId);
+	const channel = await guild.channels.cache.get(db.challengechannelid);
 	const challenges = await challengedb.Challenges.findAll({ where: { timeframe: 'monthly' } });
+
 	console.log(`Found ${challenges.length} challenges`);
 	if (challenges.length > 0) {
 		const challengesString = challenges.map(c =>
@@ -81,6 +88,6 @@ module.exports = {
         dailyMessage.start();
 		weeklyMessage.start();
 		monthlyMessage.start();
-		console.log('Cron jobs started');
+		console.log('Cron jobs scheduled');
 	}
 };
