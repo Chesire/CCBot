@@ -16,7 +16,7 @@ config.json
 {
     // This is the token for the bot itself, from discord.
     "token": "",
-    // The bots clientId, from discord.
+    // The bots clientId or applicationId, from discord.
     "clientId": "",
     // Id of the guild this will attach to.
     "guildId": ""
