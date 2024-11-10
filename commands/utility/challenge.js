@@ -121,7 +121,7 @@ async function addChallenge(interaction) {
 				`<@${interaction.user.id}> is adding a new challenge.\n\n
 				Every ${timeString} they will do '${description}'\n
 				They will ${allowPause ? '' : 'not' } allow pauses\n
-				They are allowing ${cheats} per ${timeString}`
+				They are allowing ${cheats} cheats per ${timeString}.`
 			);
 		}
 	} catch (error) {
