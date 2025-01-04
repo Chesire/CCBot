@@ -199,7 +199,7 @@ async function removeChallenge(interaction) {
 			if (challenge) {
 				await challengedb.Challenges.destroy({ where: { id: parseInt(confirmation.customId) } });
 				await confirmation.update({
-					content: `Challenge ${confirmation.customId} successfully deleted`,
+					content: `Challenge '${challenge.name}' successfully deleted`,
 					components: []
 				});
 			}
