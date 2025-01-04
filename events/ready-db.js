@@ -7,7 +7,7 @@ module.exports = {
 	once: true,
 	execute(client) {
 		console.log(`${client.user.tag} ready. Syncing DBs!`);
-		admindb.Admin.sync();
+		admindb.Admin.sync({ alter: true });
 		challengedb.Challenges.sync();
 		console.log('DBs Synced!');
 	}

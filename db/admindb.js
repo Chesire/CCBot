@@ -20,6 +20,10 @@ const Admin = sequelize.define('admin', {
 	shamedroleid: {
 		type: Sequelize.TEXT,
 		defaultValue: '0'
+	},
+	allowbotshamereplies: {
+		type: Sequelize.BOOLEAN,
+		defaultValue: true
 	}
 });
 

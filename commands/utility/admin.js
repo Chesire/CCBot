@@ -6,6 +6,17 @@ const data = new SlashCommandBuilder()
     .setDescription('Interact with the admin console')
     .addSubcommand(subCommand =>
         subCommand
+            .setName('allow-bot-shame-replies')
+            .setDescription('Allows the bot to reply to shamed users')
+            .addBooleanOption(option =>
+                option
+                    .setName('allow')
+                    .setDescription('Is bot allowed to send replies to shamed')
+                    .setRequired(true)
+            )
+    )
+    .addSubcommand(subCommand =>
+        subCommand
             .setName('set-challenge-channel')
             .setDescription('Sets the channel send challenge reminders')
             .addChannelOption(option =>
@@ -37,6 +48,20 @@ const data = new SlashCommandBuilder()
         .setName('show-shamed-role')
         .setDescription('Shows which role is for the shamed')
     );
+
+async function allowBotShameReplies(interaction) {
+    const allowed = interaction.options.getBoolean('allow');
+    const rows = await adminDb.Admin.update({ allowbotshamereplies: allowed }, { where: { singleid: 0 } });
+    if (rows == 0) {
+        buildDefaultDb();
+        await adminDb.Admin.update({ allowbotshamereplies: allowed }, { where: { singleid: 0 } });
+    }
+    if (allowed) {
+        await interaction.reply('Bot can now post replies to shamed users');
+    } else {
+        await interaction.reply('Bot can no longer post replies to shamed users');
+    }
+}
 
 async function setChallengeChannel(interaction) {
 	const channel = interaction.options.getChannel('channel');
@@ -95,7 +120,9 @@ module.exports = {
 	data: data,
     async execute(interaction) {
 		const subCommand = interaction.options.getSubcommand();
-        if (subCommand === 'set-challenge-channel') {
+        if (subCommand === 'allow-bot-shame-replies') {
+            allowBotShameReplies(interaction);
+        } else if (subCommand === 'set-challenge-channel') {
             setChallengeChannel(interaction);
         } else if (subCommand === 'set-shamed-role') {
             setShamedOneRole(interaction);
