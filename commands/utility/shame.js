@@ -39,7 +39,16 @@ async function shame(interaction) {
     const member = await guild.members.fetch(user.id);
     await member.roles.add(role);
 
-    await interaction.reply(`SHAME <@${user.id}> SHAME\nhttps://tenor.com/VU1y.gif`);
+    const shameGifs = [
+        'https://tenor.com/VU1y.gif',
+        'https://tenor.com/xV7I.gif',
+        'https://tenor.com/bSiK8.gif',
+        'https://tenor.com/bLQnA.gif',
+        'https://tenor.com/uDmFdQcabLN.gif'
+    ];
+    const selectedGif = shameGifs[Math.floor(Math.random() * shameGifs.length)];
+
+    await interaction.reply(`SHAME <@${user.id}> SHAME\n${selectedGif}`);
 }
 
 async function unshame(interaction) {
