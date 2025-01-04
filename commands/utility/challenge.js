@@ -117,7 +117,7 @@ async function addChallenge(interaction) {
 			} else if (timeFrame === 'monthly') {
 				timeString = 'month';
 			}
-			await interaction.reply(`<@${interaction.user.id}> is adding a new challenge.\nEvery ${timeString} they will do '${description}'\nThey will ${allowPause ? '' : 'not' } allow pauses\nThey are allowing ${cheats} cheats per ${timeString}.`);
+			await interaction.reply(`<@${interaction.user.id}> is adding their '${name}' challenge.\nEvery ${timeString} they will do '${description}'\nThey will ${allowPause ? '' : 'not ' }allow pauses\nThey are allowing ${cheats} cheats per ${timeString}.`);
 		}
 	} catch (error) {
 		console.log(`<@${interaction.user.id}> tried to add a challenge, but an error occurred. ${error}`);
