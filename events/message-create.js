@@ -42,8 +42,14 @@ async function trackMessage(message) {
         where: { userid: message.author.id } }
     );
 
+    const messageContent = message.content.toLowerCase();
+    const newMessageCount = db.messagecount + 1;
+    const isGameText = messageContent === 'i lost' || messageContent === 'lost';
+    const newTimesLost = isGameText ? db.timeslost + 1 : db.timeslost;
+
     db.set({
-        messagecount: db.messagecount + 1
+        messagecount: newMessageCount,
+        timeslost : newTimesLost
     });
 
     await db.save();
