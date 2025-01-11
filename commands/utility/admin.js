@@ -47,11 +47,6 @@ const data = new SlashCommandBuilder()
         subCommand
             .setName('show-shamed-role')
             .setDescription('Shows which role is for the shamed')
-    )
-    .addSubcommand(subCommand =>
-        subCommand
-            .setName('wrapped')
-            .setDescription('Prints out the wrapped info for everybody.')
     );
 
 async function allowBotShameReplies(interaction) {
