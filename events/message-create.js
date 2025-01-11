@@ -1,5 +1,6 @@
 const { Events } = require('discord.js');
 const adminDb = require('../db/admindb');
+const wrappedDb = require('../db/wrappeddb');
 
 async function replyToPurple(message) {
     const randomChance = Math.floor(Math.random() * 50);
@@ -32,9 +33,26 @@ async function replyToPurple(message) {
     }
 }
 
+async function trackMessage(message) {
+    if (message.author.bot) {
+        return;
+    }
+
+    const [db, created] = await wrappedDb.Wrapped.findOrCreate({
+        where: { userid: message.author.id } }
+    );
+
+    db.set({
+        messagecount: db.messagecount + 1
+    });
+
+    await db.save();
+}
+
 module.exports = {
 	name: Events.MessageCreate,
 	async execute(message) {
         replyToPurple(message);
+        trackMessage(message);
 	}
 };

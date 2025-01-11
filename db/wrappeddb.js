@@ -9,20 +9,20 @@ const sequelize = new Sequelize('wrappeddb', 'user', 'password', {
 });
 
 const Wrapped = sequelize.define('wrapped', {
-    userid: Sequelize.TEXT,
-    messageCount: {
+    userid: Sequelize.NUMBER,
+    messagecount: {
         type: Sequelize.NUMBER,
         defaultValue: 0
     },
-    shamedCount: {
+    shamedcount: {
         type: Sequelize.NUMBER,
         defaultValue: 0
     },
-    missedChallenges: {
+    missedchallenges: {
         type: Sequelize.NUMBER,
         defaultValue: 0
     },
-    timesLost: {
+    timeslost: {
         type: Sequelize.NUMBER,
         defaultValue: 0
     }
