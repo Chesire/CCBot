@@ -21,7 +21,18 @@ const data = new SlashCommandBuilder()
     );
 
 async function reset(interaction) {
+    const confirmation = interaction.options.getString('verify');
+    if (confirmation !== 'RESET') {
+        console.log(`Reset was called, but verify text was ${confirmation}`);
+        await interaction.reply('Incorrect verify text, ignoring call to reset');
+        return;
+    }
+    console.log('Reset was called, and verify text was correct');
 
+    await interaction.reply('Reset successful, wrapped data is cleared');
+    await wrappedDb.Wrapped.destroy({
+        truncate: true
+    });
 }
 
 async function show(interaction) {
