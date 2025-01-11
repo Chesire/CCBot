@@ -1,5 +1,6 @@
 const { Events } = require('discord.js');
 const adminDb = require('../db/admindb');
+const wrappedDb = require('../db/wrappeddb');
 
 async function replyToPurple(message) {
     const randomChance = Math.floor(Math.random() * 50);
@@ -14,9 +15,8 @@ async function replyToPurple(message) {
 
     const guild = message.guild;
 
-    const shamedRole = await guild.roles.fetch(db.shamedroleid);
     const member = await guild.members.fetch(message.author.id);
-    const isShamed = member.roles.cache.hasAny(shamedRole.id);
+    const isShamed = member.roles.cache.hasAny(db.shamedroleid);
 
     if (isShamed) {
         const purpleGifs = [
@@ -32,9 +32,32 @@ async function replyToPurple(message) {
     }
 }
 
+async function trackMessage(message) {
+    if (message.author.bot) {
+        return;
+    }
+
+    const [db, created] = await wrappedDb.Wrapped.findOrCreate({
+        where: { userid: message.author.id }
+    });
+
+    const messageContent = message.content.toLowerCase();
+    const newMessageCount = db.messagecount + 1;
+    const isGameText = messageContent === 'i lost' || messageContent === 'lost';
+    const newTimesLost = isGameText ? db.timeslost + 1 : db.timeslost;
+
+    db.set({
+        messagecount: newMessageCount,
+        timeslost : newTimesLost
+    });
+
+    await db.save();
+}
+
 module.exports = {
 	name: Events.MessageCreate,
 	async execute(message) {
         replyToPurple(message);
+        trackMessage(message);
 	}
 };

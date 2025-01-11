@@ -34,19 +34,19 @@ const data = new SlashCommandBuilder()
 	)
     .addSubcommand(subCommand =>
         subCommand
-        .setName('set-shamed-role')
-        .setDescription('Set the role to use for the shamed one')
-        .addRoleOption(option =>
-            option
-            .setName('role')
-            .setDescription('The role to use to notify for shamed one reminders')
-            .setRequired(true)
+            .setName('set-shamed-role')
+            .setDescription('Set the role to use for the shamed one')
+            .addRoleOption(option =>
+                option
+                .setName('role')
+                .setDescription('The role to use to notify for shamed one reminders')
+                .setRequired(true)
         )
     )
     .addSubcommand(subCommand =>
         subCommand
-        .setName('show-shamed-role')
-        .setDescription('Shows which role is for the shamed')
+            .setName('show-shamed-role')
+            .setDescription('Shows which role is for the shamed')
     );
 
 async function allowBotShameReplies(interaction) {

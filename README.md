@@ -23,6 +23,10 @@ challenge
 shame
     add - Adds the shamed role to a user.
     remove - Removes the shamed role from a user.
+
+wrapped
+    reset - Resets the data for the wrapped, NOT REVERSABLE.
+    show - Shows the current wrapped data for the server.
 ```
 
 ## Development
