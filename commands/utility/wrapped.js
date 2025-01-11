@@ -36,7 +36,7 @@ async function reset(interaction) {
 }
 
 async function show(interaction) {
-
+    await interaction.reply('Nice try, its not end of year yet.');
 }
 
 module.exports = {
