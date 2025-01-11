@@ -15,9 +15,8 @@ async function replyToPurple(message) {
 
     const guild = message.guild;
 
-    const shamedRole = await guild.roles.fetch(db.shamedroleid);
     const member = await guild.members.fetch(message.author.id);
-    const isShamed = member.roles.cache.hasAny(shamedRole.id);
+    const isShamed = member.roles.cache.hasAny(db.shamedroleid);
 
     if (isShamed) {
         const purpleGifs = [
