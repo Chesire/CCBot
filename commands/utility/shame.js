@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const adminDb = require('../../db/admindb');
+const wrappedDb = require('../../db/wrappeddb');
 
 const data = new SlashCommandBuilder()
     .setName('shame')
@@ -37,7 +38,21 @@ async function shame(interaction) {
     const guild = interaction.guild;
     const role = await guild.roles.fetch(db.shamedroleid);
     const member = await guild.members.fetch(user.id);
+
     await member.roles.add(role);
+
+    const [wrapped, created] = await wrappedDb.Wrapped.findOrCreate({
+        where: { userid: user.id }
+    });
+    const missedChallenges = wrapped.missedchallenges + 1;
+    const shamedCount = member.roles.cache.some(roleCache => roleCache.id === db.shamedroleid) ?
+        wrapped.shamedcount :
+        wrapped.shamedcount + 1;
+    wrapped.set({
+        missedchallenges: missedChallenges,
+        shamedcount : shamedCount
+    });
+    await wrapped.save();
 
     const shameGifs = [
         'https://tenor.com/VU1y.gif',

@@ -39,8 +39,8 @@ async function trackMessage(message) {
     }
 
     const [db, created] = await wrappedDb.Wrapped.findOrCreate({
-        where: { userid: message.author.id } }
-    );
+        where: { userid: message.author.id }
+    });
 
     const messageContent = message.content.toLowerCase();
     const newMessageCount = db.messagecount + 1;
