@@ -3,7 +3,7 @@ const adminDb = require('../db/admindb');
 const wrappedDb = require('../db/wrappeddb');
 
 async function replyToPurple(message) {
-    const randomChance = Math.floor(Math.random() * 50);
+    const randomChance = Math.floor(Math.random() * 100);
     if (randomChance != 49) {
         return;
     }
