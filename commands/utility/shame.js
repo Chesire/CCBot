@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js');
 const adminDb = require('../../db/admindb');
+const shameEventsDb = require('../../db/shameeventsdb');
 const wrappedDb = require('../../db/wrappeddb');
 
 const weekExtra = 7 * 24 * 60 * 60 * 1000;
@@ -70,12 +71,17 @@ async function shame(interaction) {
 }
 
 async function handleEvent(guild, user) {
-    const previousEventId = '1332096772532863137'; // TODO get ID from DB
-    if (previousEventId) {
-        const previousEvent = await guild.scheduledEvents.fetch({ guildScheduledEvent: previousEventId });
-        if (previousEvent) {
-            await updateEvent(previousEvent);
-            return;
+    const previousEventTable = await shameEventsDb.ShameEvents.findOne({ where: { userid: user.id } });
+    if (previousEventTable) {
+        try {
+            const previousEvent = await guild.scheduledEvents.fetch({ guildScheduledEvent: previousEventTable.eventid });
+            if (previousEvent) {
+                await updateEvent(previousEvent);
+                return;
+            }
+        } catch (exception) {
+            console.log(`Exception occurred updating: ${exception}\nRemoving the current stored value and creating new`);
+            shameEventsDb.ShameEvents.destroy({ where: { userid: user.id } });
         }
     }
     // if no previous event, create a new one.
@@ -90,7 +96,7 @@ async function updateEvent(event) {
     const previousEnd = new Date(event.scheduledEndAt);
     const newEndDate = new Date(previousEnd.getTime() + weekExtra + 1000);
 
-    console.log(`previousStart - ${previousStart},\nnewStartDate - ${newStartDate}\npreviousEnd ${previousEnd}\nnewEndDate - ${newEndDate}`);
+    console.log(`previousStart - ${previousStart}\nnewStartDate - ${newStartDate}\npreviousEnd ${previousEnd}\nnewEndDate - ${newEndDate}`);
 
     await event.edit({
         scheduledStartTime: newStartDate,
@@ -103,7 +109,7 @@ async function createEvent(guild, user) {
     const startDate = new Date(Date.now() + weekExtra);
     const endDate = new Date(Date.now() + weekExtra + 1000);
 
-    const newEventId = await guild.scheduledEvents.create({
+    const newEvent = await guild.scheduledEvents.create({
         name: `${user.displayName} shamed ends`,
         scheduledStartTime: startDate,
         scheduledEndTime: endDate,
@@ -115,8 +121,10 @@ async function createEvent(guild, user) {
         },
         reason: ''
     });
-
-    // TODO: save event ID to DB against user ID
+    await shameEventsDb.ShameEvents.create({
+        userid: user.id,
+        eventid: newEvent.id
+    });
 }
 
 async function unshame(interaction) {
