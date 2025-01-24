@@ -1,6 +1,9 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js');
 const adminDb = require('../../db/admindb');
+const shameEventsDb = require('../../db/shameeventsdb');
 const wrappedDb = require('../../db/wrappeddb');
+
+const weekExtra = 7 * 24 * 60 * 60 * 1000;
 
 const data = new SlashCommandBuilder()
     .setName('shame')
@@ -53,6 +56,7 @@ async function shame(interaction) {
         shamedcount : shamedCount
     });
     await wrapped.save();
+    await handleEvent(guild, user);
 
     const shameGifs = [
         'https://tenor.com/VU1y.gif',
@@ -64,6 +68,63 @@ async function shame(interaction) {
     const selectedGif = shameGifs[Math.floor(Math.random() * shameGifs.length)];
 
     await interaction.reply(`SHAME <@${user.id}> SHAME\n${selectedGif}`);
+}
+
+async function handleEvent(guild, user) {
+    const previousEventTable = await shameEventsDb.ShameEvents.findOne({ where: { userid: user.id } });
+    if (previousEventTable) {
+        try {
+            const previousEvent = await guild.scheduledEvents.fetch({ guildScheduledEvent: previousEventTable.eventid });
+            if (previousEvent) {
+                await updateEvent(previousEvent);
+                return;
+            }
+        } catch (exception) {
+            console.log(`Exception occurred updating: ${exception}\nRemoving the current stored value and creating new`);
+            shameEventsDb.ShameEvents.destroy({ where: { userid: user.id } });
+        }
+    }
+    // if no previous event, create a new one.
+    await createEvent(guild, user);
+}
+
+async function updateEvent(event) {
+    console.log(`Found previous event to update - ${event}`);
+
+    const previousStart = new Date(event.scheduledStartAt);
+    const newStartDate = new Date(previousStart.getTime() + weekExtra);
+    const previousEnd = new Date(event.scheduledEndAt);
+    const newEndDate = new Date(previousEnd.getTime() + weekExtra + 1000);
+
+    console.log(`previousStart - ${previousStart}\nnewStartDate - ${newStartDate}\npreviousEnd ${previousEnd}\nnewEndDate - ${newEndDate}`);
+
+    await event.edit({
+        scheduledStartTime: newStartDate,
+        scheduledEndTime: newEndDate
+    });
+}
+
+async function createEvent(guild, user) {
+    console.log('No previous event, creating new one');
+    const startDate = new Date(Date.now() + weekExtra);
+    const endDate = new Date(Date.now() + weekExtra + 1000);
+
+    const newEvent = await guild.scheduledEvents.create({
+        name: `${user.displayName}s period of shame ends`,
+        scheduledStartTime: startDate,
+        scheduledEndTime: endDate,
+        privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
+        description: `Event for when the shame of ${user.displayName} has come to an end.`,
+        entityType: GuildScheduledEventEntityType.External,
+        entityMetadata: {
+            location: ''
+        },
+        reason: ''
+    });
+    await shameEventsDb.ShameEvents.create({
+        userid: user.id,
+        eventid: newEvent.id
+    });
 }
 
 async function unshame(interaction) {
