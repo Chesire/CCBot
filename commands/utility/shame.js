@@ -110,7 +110,7 @@ async function createEvent(guild, user) {
     const endDate = new Date(Date.now() + weekExtra + 1000);
 
     const newEvent = await guild.scheduledEvents.create({
-        name: `${user.displayName} shamed ends`,
+        name: `${user.displayName}s period of shame ends`,
         scheduledStartTime: startDate,
         scheduledEndTime: endDate,
         privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
