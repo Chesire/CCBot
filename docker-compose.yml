@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  ccbot:
+    build: .
+    container_name: ccbot
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./data:/app/data
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/app/data
