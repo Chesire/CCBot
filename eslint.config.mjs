@@ -4,9 +4,9 @@ import globals from 'globals';
 export default [
   pluginJs.configs.recommended,
   {
-    languageOptions: { globals: globals.node },
-    rules: {
-      'arrow-spacing': ['warn', { 'before': true, 'after': true }],
+  languageOptions: { globals: globals.node },
+  rules: {
+    'arrow-spacing': ['warn', { 'before': true, 'after': true }],
 		  'comma-spacing': 'error',
 		  'comma-style': 'error',
 		  'curly': ['error', 'multi-line', 'consistent'],
@@ -40,6 +40,6 @@ export default [
 		  'space-unary-ops': 'error',
 		  'spaced-comment': 'error',
 		  'yoda': 'error',
-    },
+  },
   },
 ];
