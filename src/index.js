@@ -7,6 +7,7 @@ const { loadEvents } = require('./utils/event-loader');
 // Create a new client instance
 const client = new Client({
   intents: [
+    //GatewayIntentBits.DirectMessages,
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
