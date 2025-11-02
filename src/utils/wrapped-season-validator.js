@@ -4,7 +4,7 @@
  */
 function isWrappedSeason() {
   const now = new Date();
-  const month = now.getMonth();
+  const month = now.getMonth(); // 0 based
   const day = now.getDate();
 
   // from boxing day -> end of Jan
