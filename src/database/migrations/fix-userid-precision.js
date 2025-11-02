@@ -153,16 +153,16 @@ async function migrateUserIds() {
           break;
         }
         
-        // Check if IDs are similar (same length, share prefix of at least 16 digits)
+        // Check if IDs are similar (same length, share prefix of at least 15 digits)
         // This catches precision loss cases where only trailing digits differ
-        // 16-digit prefix ensures same Discord timestamp/worker/process (virtually impossible collision)
+        // 15-digit prefix ensures same Discord timestamp/worker (virtually impossible collision)
         if (fullId.length === wrappedId.length && 
             fullId.length >= 17 && fullId.length <= 19) {
           
-          // Compare first 16 digits (Discord snowflakes have 42-bit timestamp + worker/process info)
-          // Precision loss from NUMBER type only affects the last 2-4 digits (increment field)
-          const wrappedPrefix = wrappedId.substring(0, 16);
-          const fullPrefix = fullId.substring(0, 16);
+          // Compare first 15 digits (Discord snowflakes have 42-bit timestamp + most of worker/process info)
+          // Precision loss from NUMBER type can affect the last 3-5 digits (increment + part of process)
+          const wrappedPrefix = wrappedId.substring(0, 15);
+          const fullPrefix = fullId.substring(0, 15);
           
           if (wrappedPrefix === fullPrefix) {
             // High confidence match - same prefix indicates same user, just corrupted trailing digits
