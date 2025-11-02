@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const adminDb = require('../database/admindb');
+const shameEventsDb = require('../database/shameeventsdb');
 
 const data = new SlashCommandBuilder()
   .setName('admin')
@@ -47,6 +48,11 @@ const data = new SlashCommandBuilder()
     subCommand
       .setName('show-shamed-role')
       .setDescription('Shows which role is for the shamed')
+  )
+  .addSubcommand(subCommand =>
+    subCommand
+      .setName('initialize-users')
+      .setDescription('Add all users to event database with value 0 if not already present')
   );
 
 async function allowBotShameReplies(interaction) {
@@ -107,6 +113,40 @@ async function showShamedOneRole(interaction) {
   }
 }
 
+async function initializeUsers(interaction) {
+  await interaction.deferReply();
+
+  try {
+    const guild = interaction.guild;
+    const members = await guild.members.fetch({ force: true });
+    console.log(`Initializing ${members.size} members in shame event database`);
+
+    let addedCount = 0;
+    let skippedCount = 0;
+
+    for (const member of members.values()) {
+      const userId = member.id;
+      const existing = await shameEventsDb.ShameEvents.findOne({ where: { userid: userId } });
+
+      if (!existing) {
+        await shameEventsDb.ShameEvents.create({
+          userid: userId,
+          eventid: '0'
+        });
+        addedCount++;
+      } else {
+        skippedCount++;
+      }
+    }
+
+    console.log(`User initialization complete. Added: ${addedCount}, Skipped: ${skippedCount}`);
+    await interaction.editReply(`Initialized ${addedCount} new users in the database. (${skippedCount} already existed)`);
+  } catch (error) {
+    console.error('Error initializing users:', error);
+    await interaction.editReply('An error occurred while initializing users.');
+  }
+}
+
 async function buildDefaultDb() {
   await adminDb.Admin.create({
     singleid: 0,
@@ -130,6 +170,8 @@ module.exports = {
       showChallengeChannel(interaction);
     } else if (subCommand === 'show-shamed-role') {
       showShamedOneRole(interaction);
+    } else if (subCommand === 'initialize-users') {
+      initializeUsers(interaction);
     } else {
       await interaction.reply('Unknown command');
     }

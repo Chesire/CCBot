@@ -2,6 +2,11 @@
 
 Discord bot to aid with challenges
 
+## Setup
+
+It is recommended that a new role is made for the bot that has admin permissions, so it can access everything it needs.
+If that is too high, experiment with the right permissions until it works correctly.
+
 ## Commands
 
 ```text
