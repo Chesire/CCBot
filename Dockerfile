@@ -14,5 +14,9 @@ COPY . .
 # Create data directory for databases
 RUN mkdir -p /app/data
 
-# Run the bot from /app/src (but databases write to /app/data)
-CMD ["node", "/app/src/index.js"]
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Run deploy-commands before starting bot
+ENTRYPOINT ["/app/entrypoint.sh"]
