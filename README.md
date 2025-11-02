@@ -36,16 +36,70 @@ Once the above is done then the server can be re-run and the new commands should
 
 ## Deploying
 
-When ready to deploy to correct server, change the `guildId` in `config.json`.
+### Local Deployment
 
-```javascript
-config.json
+Create a config.json file.
+
+```json
 {
-    // This is the token for the bot itself, from discord.
-    "token": "",
-    // The bots clientId or applicationId, from discord.
-    "clientId": "",
-    // Id of the guild this will attach to.
-    "guildId": ""
+    "token": "YOUR_BOT_TOKEN",
+    "clientId": "YOUR_CLIENT_ID",
+    "guildId": "YOUR_GUILD_ID"
 }
 ```
+
+Get these values from the [Discord Developer Portal](https://discord.com/developers/applications):
+- **token**: Bot token from the "Token" section
+- **clientId**: Application ID from the "General Information" section
+- **guildId**: Your Discord server ID (right-click server → Copy Server ID)
+
+### Docker Deployment
+
+Pull the image from GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/chesire/ccbot:latest
+```
+
+Create a `docker-compose.yml` file:
+
+```yaml
+version: '3.8'
+
+services:
+  ccbot:
+    image: ghcr.io/chesire/ccbot:latest
+    container_name: ccbot
+    volumes:
+      - type: bind
+        source: ./config.json
+        target: /app/config.json
+        read_only: true
+      - type: bind
+        source: ./data
+        target: /app/data
+    restart: unless-stopped
+```
+
+Create a `config.json` file in the same directory with your Discord credentials.
+
+```json
+{
+    "token": "YOUR_BOT_TOKEN",
+    "clientId": "YOUR_CLIENT_ID",
+    "guildId": "YOUR_GUILD_ID"
+}
+```
+
+Get these values from the [Discord Developer Portal](https://discord.com/developers/applications):
+- **token**: Bot token from the "Token" section
+- **clientId**: Application ID from the "General Information" section
+- **guildId**: Your Discord server ID (right-click server → Copy Server ID)
+
+
+Run with:
+```bash
+docker-compose up -d
+```
+
+The `data/` directory will be created automatically and persist your SQLite databases between restarts.
