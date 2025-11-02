@@ -18,7 +18,7 @@ module.exports = {
 
     console.log('DBs Synced!');
 
-    // Run migration to fix userid precision
-    await migrateUserIds();
+    // Run migration to fix userid precision (pass client for guild member fetching)
+    await migrateUserIds(client);
   }
 };
