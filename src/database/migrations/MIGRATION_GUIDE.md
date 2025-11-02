@@ -10,8 +10,10 @@ This migration fixes an issue where Discord user IDs were stored as `NUMBER` (IN
 
 1. **Schema Conversion**: Converts `wrappeds.userid` column from `NUMBER` to `TEXT`
 2. **Data Preservation**: Copies all existing data to the new schema with row count verification
-3. **ID Matching**: Matches truncated IDs with full-precision IDs from `shameeventsdb`
-4. **Backup Creation**: Preserves pre-migration data as `wrappeds_pre_migration` table for rollback
+3. **Guild Member Fetching**: Fetches all Discord guild members to get accurate, full-precision user IDs
+4. **ID Matching**: Compares wrapped IDs with guild members using 15-digit prefix matching to catch precision loss
+5. **Precision Loss Detection**: Identifies corrupted IDs (e.g., `122688644782751740 → 122688644782751744`)
+6. **Backup Creation**: Preserves pre-migration data as `wrappeds_pre_migration` table for rollback
 
 ## Production Deployment Checklist
 
@@ -27,9 +29,9 @@ Before deploying to production:
   - Monitor logs for migration completion
   - Verify ID matching results
 
-- [ ] **Verify shameeventsdb**: Ensure `shameeventsdb.userid` is already `TEXT` type
-  - The migration will warn if it's not, but will still attempt to match
-  - If both are `NUMBER`, matching will fail (both truncated)
+- [ ] **Verify shameeventsdb**: (No longer used for ID matching)
+  - Migration now fetches guild members directly from Discord
+  - This ensures accuracy using live guild data
 
 - [ ] **Plan Downtime**: Migration runs during bot startup
   - Bot will be unavailable for a few seconds during the process
@@ -120,25 +122,28 @@ This means:
 **Symptom**: `[Migration] Completed! Updated: 0, Skipped: X, Not Found: Z`
 
 **Possible Causes**:
-- All IDs in `wrappeddb` are already full-precision (18+ digits)
-- No matching records in `shameeventsdb`
-- `shameeventsdb` not migrated to TEXT yet
+- All IDs in `wrappeddb` are already correct (exact match with guild members)
+- Users with corrupted IDs are no longer in the guild
+- Precision loss only occurred in trailing digits that changed between migration runs
 
 **Solution**:
-- Check if `shameeventsdb.userid` is TEXT type
-- If not, migrate `shameeventsdb` first, then rollback and re-run this migration
+- Check bot logs for which IDs failed to match
+- Verify if those users are still in the Discord guild
+- Users not in the guild will keep their existing IDs (safe - just not verified)
 
 ### "Not Found" count is high
 
 **Symptom**: `[Migration] Completed! Updated: X, Skipped: Y, Not Found: MANY`
 
 **Possible Causes**:
-- Users have no corresponding shame events
-- Truncated ID doesn't match any full ID in shame events
+- Users with those IDs are no longer in the Discord guild
+- They may have left or been removed from the server
+- Precision loss was significant (>15 digit prefix doesn't match)
 
 **Action**:
-- These records keep their truncated IDs (safe - just less precise)
-- Consider manual investigation if critical users are affected
+- These records keep their existing IDs (safe - not broken, just not verified against guild)
+- This is expected behavior for users not in the guild
+- No action needed - migration proceeds normally
 
 ### Row count mismatch error
 
@@ -190,7 +195,13 @@ A: Not easily - it will leave the database in an inconsistent state. Use the rol
 A: No, only `wrappeddb`. Other databases should already use TEXT for userids.
 
 **Q: Will this fix existing truncated IDs?**  
-A: Only if a matching full ID exists in `shameeventsdb`. Otherwise, truncated IDs remain.
+A: Only if the user is in the guild and their ID matches using the 15-digit prefix comparison. Otherwise, truncated IDs remain as-is (safe, just not verified).
+
+**Q: What if a user is not in the guild?**  
+A: Migration will log a "Not Found" warning. The ID stays unchanged. This is normal for users who have left the guild.
+
+**Q: What data source does the migration use?**  
+A: Guild members fetched live from Discord at bot startup. This ensures accuracy with the most current data.
 
 **Q: How long does the migration take?**  
 A: Typically <1 second for up to 1000 records. Depends on database size.
