@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { isWrappedSeason } = require('../utils/wrappedSeasonValidator');
 const wrappedDb = require('../database/wrappeddb');
 
 const data = new SlashCommandBuilder()
@@ -11,7 +12,10 @@ const data = new SlashCommandBuilder()
   );
 
 async function show(interaction) {
-  await interaction.reply('Nice try, its not end of year yet.');
+  if (!isWrappedSeason()) {
+    return await interaction.reply('Its not yet time for wrapped');
+  }
+
 }
 
 module.exports = {
