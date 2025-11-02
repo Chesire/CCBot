@@ -136,38 +136,66 @@ async function migrateUserIds() {
     for (const record of wrappedRecords) {
       const wrappedId = String(record.userid);
       
-      // Check if this ID length indicates truncation (Discord IDs should be 18+ digits)
-      if (wrappedId.length < 18) {
-        console.log(`[Migration] ID ${wrappedId} appears truncated (${wrappedId.length} digits)`);
-
-        // Try to find a matching full ID from shame events
-        let found = false;
-        for (const shameRecord of shameRecords) {
-          const fullId = String(shameRecord.userid);
+      // Check if this ID might be corrupted due to NUMBER precision loss
+      // When storing large numbers as INTEGER, precision is lost in the least significant digits
+      // Strategy: Find shame events that match exactly OR are "close" (differ only in trailing digits)
+      
+      let found = false;
+      let matchedId = null;
+      
+      for (const shameRecord of shameRecords) {
+        const fullId = String(shameRecord.userid);
+        
+        // Exact match - no corruption
+        if (fullId === wrappedId) {
+          console.log(`[Migration] ID ${wrappedId} verified (exact match with shame events)`);
+          found = true;
+          break;
+        }
+        
+        // Check if IDs are similar (same length, share prefix of at least 16 digits)
+        // This catches precision loss cases where only trailing digits differ
+        // 16-digit prefix ensures same Discord timestamp/worker/process (virtually impossible collision)
+        if (fullId.length === wrappedId.length && 
+            fullId.length >= 17 && fullId.length <= 19) {
           
-          // More strict matching: the full ID should start with the truncated ID
-          // AND be approximately 18 digits (valid Discord snowflake length)
-          if (fullId.startsWith(wrappedId) && fullId.length >= 17 && fullId.length <= 19) {
-            console.log(`[Migration] Found match! Updating ${wrappedId} -> ${fullId}`);
-            
-            // Use parameterized query to prevent SQL injection
-            await wrappedSequelize.query(
-              'UPDATE wrappeds SET userid = ? WHERE id = ?',
-              { replacements: [fullId, record.id], type: Sequelize.QueryTypes.UPDATE }
-            );
-            updatedCount++;
+          // Compare first 16 digits (Discord snowflakes have 42-bit timestamp + worker/process info)
+          // Precision loss from NUMBER type only affects the last 2-4 digits (increment field)
+          const wrappedPrefix = wrappedId.substring(0, 16);
+          const fullPrefix = fullId.substring(0, 16);
+          
+          if (wrappedPrefix === fullPrefix) {
+            // High confidence match - same prefix indicates same user, just corrupted trailing digits
+            console.log(`[Migration] Precision loss detected! ID ${wrappedId} found as ${fullId} in shame events`);
+            matchedId = fullId;
             found = true;
             break;
           }
         }
-
-        if (!found) {
-          console.log(`[Migration] WARNING: No matching shame event found for ${wrappedId}`);
-          notFoundCount++;
-        }
-      } else {
-        console.log(`[Migration] ID ${wrappedId} is full length (${wrappedId.length} digits), skipping`);
+      }
+      
+      if (matchedId) {
+        // Found a corrected version - update it
+        console.log(`[Migration] Updating ${wrappedId} -> ${matchedId}`);
+        
+        // Use parameterized query to prevent SQL injection
+        await wrappedSequelize.query(
+          'UPDATE wrappeds SET userid = ? WHERE id = ?',
+          { replacements: [matchedId, record.id], type: Sequelize.QueryTypes.UPDATE }
+        );
+        updatedCount++;
+      } else if (found) {
+        // Found exact match in shame events - no update needed
+        console.log(`[Migration] ID ${wrappedId} verified against shame events (exact match)`);
         skippedCount++;
+      } else {
+        // No matching ID found in shame events
+        if (wrappedId.length < 18) {
+          console.log(`[Migration] WARNING: No matching shame event found for truncated ID ${wrappedId} (${wrappedId.length} digits)`);
+        } else {
+          console.log(`[Migration] WARNING: No matching shame event found for ID ${wrappedId} (may not have shame events)`);
+        }
+        notFoundCount++;
       }
     }
 
