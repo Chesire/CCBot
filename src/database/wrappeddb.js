@@ -1,11 +1,12 @@
 const { Sequelize } = require('sequelize');
+const path = require('path');
 
 const sequelize = new Sequelize('wrappeddb', 'user', 'password', {
     host: 'localhost',
     dialect: 'sqlite',
     logging: false,
     // SQLite only
-    storage: 'wrappeddb.sqlite',
+    storage: path.join(__dirname, '../../data/wrappeddb.sqlite'),
 });
 
 const Wrapped = sequelize.define('wrapped', {

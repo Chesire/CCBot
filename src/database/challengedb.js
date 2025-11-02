@@ -1,11 +1,12 @@
 const { Sequelize } = require('sequelize');
+const path = require('path');
 
 const sequelize = new Sequelize('challengedb', 'user', 'password', {
 	host: 'localhost',
 	dialect: 'sqlite',
 	logging: false,
 	// SQLite only
-	storage: 'challengedb.sqlite',
+	storage: path.join(__dirname, '../../data/challengedb.sqlite'),
 });
 
 const Challenges = sequelize.define('challenges', {
