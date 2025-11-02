@@ -1,5 +1,5 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const challengedb = require('../../db/challengedb');
+const challengedb = require('../database/challengedb');
 
 const challengeLimit = 5;
 

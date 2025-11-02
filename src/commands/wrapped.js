@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const wrappedDb = require('../../db/wrappeddb');
+const wrappedDb = require('../database/wrappeddb');
 
 const data = new SlashCommandBuilder()
     .setName('wrapped')

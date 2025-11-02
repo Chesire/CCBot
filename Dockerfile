@@ -14,8 +14,5 @@ COPY . .
 # Create data directory for databases
 RUN mkdir -p /app/data
 
-# Change to data directory for runtime (databases will be created here)
-WORKDIR /app/data
-
-# Run the bot from /app (but databases write to /app/data)
-CMD ["node", "/app/index.js"]
+# Run the bot from /app/src (but databases write to /app/data)
+CMD ["node", "/app/src/index.js"]
