@@ -10,7 +10,7 @@ const sequelize = new Sequelize('wrappeddb', 'user', 'password', {
 });
 
 const Wrapped = sequelize.define('wrapped', {
-  userid: Sequelize.NUMBER,
+  userid: Sequelize.TEXT,
   messagecount: {
     type: Sequelize.NUMBER,
     defaultValue: 0
