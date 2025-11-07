@@ -1,7 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const challengedb = require('../database/challengedb');
 
-const challengeLimit = 5;
+const challengeLimit = 10;
 
 const data = new SlashCommandBuilder()
   .setName('challenge')
