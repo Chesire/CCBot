@@ -1,8 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const challengedb = require('../database/challengedb');
-const UserFetcher = require('../utils/user-fetcher');
 
-// Maximum for now that can be displayed, update in the future to 10.
+// Maximum for now that can be displayed, update in the future to 10, or server defined.
 const challengeLimit = 5;
 
 const data = new SlashCommandBuilder()
@@ -137,7 +136,16 @@ async function addChallenge(interaction) {
 async function listUserChallenges(interaction) {
   const target = interaction.options.getUser('target');
   const challenges = await challengedb.Challenges.findAll({ where: { userid: target.id } });
-  if (challenges.length > 0) {
+  if (challenges.length == 0) {
+    const embed = new EmbedBuilder()
+      .setTitle('User Challenges')
+      .setColor(0xC100FF)
+      .setThumbnail(target.displayAvatarURL())
+      .setDescription(`**${target.displayName}** has no active challenges.`);
+
+    console.log(`[Challenge][caller:${interaction.user.displayName}] listed challenges for ${target.displayName} who has none`);
+    await interaction.reply({ embeds: [embed] });
+  } else {
     const buttons = challenges.map(c =>
       new ButtonBuilder()
         .setCustomId(c.id.toString())
@@ -166,8 +174,6 @@ async function listUserChallenges(interaction) {
     } catch {
       await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
     }
-  } else {
-    await interaction.reply('Could not find any challenges for that user');
   }
 }
 
@@ -218,7 +224,7 @@ module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
-    console.log(`[Challenge][caller:${interaction.user.displayName}] requested challenge subcommand '${interaction.options.getSubcommand()}'`);
+    console.log(`[Challenge][caller:${interaction.user.displayName}] used challenge subcommand '${interaction.options.getSubcommand()}'`);
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'add') {
       addChallenge(interaction);

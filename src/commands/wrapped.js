@@ -97,7 +97,7 @@ module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
-    console.log(`[Wrapped][caller:${interaction.user.displayName}] requested wrapped subcommand '${interaction.options.getSubcommand()}'`);
+    console.log(`[Wrapped][caller:${interaction.user.displayName}] used wrapped subcommand '${interaction.options.getSubcommand()}'`);
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'show') {
       await show(interaction);
