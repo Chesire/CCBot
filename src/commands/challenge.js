@@ -2,7 +2,8 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, Embed
 const challengedb = require('../database/challengedb');
 const UserFetcher = require('../utils/user-fetcher');
 
-const challengeLimit = 10;
+// Maximum for now that can be displayed, update in the future to 10.
+const challengeLimit = 5;
 
 const data = new SlashCommandBuilder()
   .setName('challenge')
@@ -115,8 +116,8 @@ async function addChallenge(interaction) {
       const embed = new EmbedBuilder()
         .setTitle('New Challenge')
         .setColor(0xC100FF)
-        .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
-        .setDescription(`**${interaction.user.username}** has added their '${name}' challenge!`)
+        .setThumbnail(interaction.user.displayAvatarURL())
+        .setDescription(`**${interaction.user.displayName}** has added their '${name}' challenge!`)
         .addFields(
           { name: 'Description', value: description, inline: false },
           { name: 'Time Frame', value: timeFrameString, inline: true },
@@ -144,19 +145,46 @@ async function listAllChallenges(interaction) {
     });
     const userMap = await UserFetcher.fetchUsersByIds(Array.from(allUsers), interaction.guild, interaction.client);
 
-    const fields = [];
-    challenges.forEach(c => fields.push(
-      { name: `${userMap[c.userid].displayName} - ${c.name}`, value: c.description, inline: true }
-    ));
+    const challengesByUser = {};
+    challenges.forEach(c => {
+      if (!challengesByUser[c.userid]) {
+        challengesByUser[c.userid] = [];
+      }
+      challengesByUser[c.userid].push(c);
+    });
 
-    const challengesEmbed = new EmbedBuilder()
-      .setTitle('All Guild Challenges')
-      .setDescription('Every user challenge in the guild')
-      .setColor(0xC100FF)
-      .addFields(fields);
+    const embeds = [];
+    Object.entries(challengesByUser).forEach(([userId, userChallenges]) => {
+      const user = userMap[userId];
+      const fields = userChallenges.map(c => ({
+        name: c.name,
+        value: `${c.description}\n*${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}*`,
+        inline: false
+      }));
+
+      embeds.push(new EmbedBuilder()
+        .setTitle(`${user.displayName}'s Challenges`)
+        .setColor(0xC100FF)
+        .setThumbnail(user.displayAvatarURL())
+      );
+
+      // Add fields in chunks of 25 (Discord's field limit)
+      for (let i = 0; i < fields.length; i += 25) {
+        const chunk = fields.slice(i, i + 25);
+        if (i === 0) {
+          embeds[embeds.length - 1].addFields(chunk);
+        } else {
+          embeds.push(new EmbedBuilder()
+            .setTitle(`${user.displayName}'s Challenges (cont.)`)
+            .setColor(0xC100FF)
+            .addFields(chunk)
+          );
+        }
+      }
+    });
 
     console.log(`[Challenge][caller:${interaction.user.displayName}] requested all challenges displayed`);
-    await interaction.reply({ embeds: [challengesEmbed] });
+    await interaction.reply({ embeds: embeds });
   }
 }
 
