@@ -124,11 +124,11 @@ async function addChallenge(interaction) {
           { name: 'Pauses Allowed', value: allowPause ? 'Yes' : 'No', inline: true }
         );
 
-      console.log(`[Challenge][caller:${interaction.user.displayName}] added a new challenge`);
+      console.log(`[Challenge][caller:${interaction.user.displayName}] Added a new challenge`);
       await interaction.reply({ embeds: [embed] });
     }
   } catch (error) {
-    console.log(`[Challenge][caller:${interaction.user.displayName}] tried to add a challenge, but an error occurred. ${error}`);
+    console.log(`[Challenge][caller:${interaction.user.displayName}] Tried to add a challenge, but an error occurred. ${error}`);
     await interaction.reply('Failed to add a challenge, try again');
   }
 }
@@ -143,36 +143,36 @@ async function listUserChallenges(interaction) {
       .setThumbnail(target.displayAvatarURL())
       .setDescription(`**${target.displayName}** has no active challenges.`);
 
-    console.log(`[Challenge][caller:${interaction.user.displayName}] listed challenges for ${target.displayName} who has none`);
+    console.log(`[Challenge][caller:${interaction.user.displayName}] Listed challenges for ${target.displayName} who has none`);
     await interaction.reply({ embeds: [embed] });
   } else {
-    const buttons = challenges.map(c =>
-      new ButtonBuilder()
-        .setCustomId(c.id.toString())
-        .setLabel(c.name)
-        .setStyle(ButtonStyle.Secondary)
-    );
+    const fields = challenges.map(c => ({
+      name: c.name,
+      value: `**Description:** ${c.description}\n**Timeframe:** ${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? 'Yes' : 'No'}`,
+      inline: false
+    }));
 
-    const row = new ActionRowBuilder()
-      .addComponents(buttons);
 
-    const response = await interaction.reply({
-      content: `Current challenges for ${target}`,
-      components: [row]
-    });
-    const collectorFilter = i => i.user.id === interaction.user.id;
+    // Split fields into chunks of 25 (Discord's field limit per embed)
+    const embeds = [];
+    for (let i = 0; i < fields.length; i += 25) {
+      const chunk = fields.slice(i, i + 25);
+      const pageNum = Math.floor(i / 25) + 1;
+      const totalPages = Math.ceil(fields.length / 25);
 
+      embeds.push(new EmbedBuilder()
+        .setTitle(`${target.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ''}`)
+        .setColor(0xC100FF)
+        .setThumbnail(target.displayAvatarURL())
+        .addFields(chunk)
+      );
+    }
+
+    console.log(`[Challenge][caller:${interaction.user.displayName}] Listed ${challenges.length} challenge(s) for ${target.displayName}`);
     try {
-      const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
-      const challenge = await challengedb.Challenges.findOne({ where: { id: parseInt(confirmation.customId) } });
-      if (challenge) {
-        await confirmation.update({
-          content: `${challenge.id}: ${challenge.name} - ${challenge.description}`,
-          components: []
-        });
-      }
-    } catch {
-      await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+      await interaction.reply({ embeds: embeds });
+    } catch (error) {
+      console.error(`[Challenge][caller:${interaction.user.displayName}] Error sending challenge list embeds: ${error}`);
     }
   }
 }
@@ -224,7 +224,7 @@ module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
-    console.log(`[Challenge][caller:${interaction.user.displayName}] used challenge subcommand '${interaction.options.getSubcommand()}'`);
+    console.log(`[Challenge][caller:${interaction.user.displayName}] Used challenge subcommand '${interaction.options.getSubcommand()}'`);
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'add') {
       addChallenge(interaction);
