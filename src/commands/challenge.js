@@ -134,60 +134,6 @@ async function addChallenge(interaction) {
   }
 }
 
-async function listAllChallenges(interaction) {
-  const challenges = await challengedb.Challenges.findAll();
-  if (challenges.length == 0) {
-    await interaction.reply('Could not find any challenges');
-  } else {
-    const allUsers = new Set();
-    challenges.forEach(c => {
-      allUsers.add(String(c.userid));
-    });
-    const userMap = await UserFetcher.fetchUsersByIds(Array.from(allUsers), interaction.guild, interaction.client);
-
-    const challengesByUser = {};
-    challenges.forEach(c => {
-      if (!challengesByUser[c.userid]) {
-        challengesByUser[c.userid] = [];
-      }
-      challengesByUser[c.userid].push(c);
-    });
-
-    const embeds = [];
-    Object.entries(challengesByUser).forEach(([userId, userChallenges]) => {
-      const user = userMap[userId];
-      const fields = userChallenges.map(c => ({
-        name: c.name,
-        value: `${c.description}\n*${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}*`,
-        inline: false
-      }));
-
-      embeds.push(new EmbedBuilder()
-        .setTitle(`${user.displayName}'s Challenges`)
-        .setColor(0xC100FF)
-        .setThumbnail(user.displayAvatarURL())
-      );
-
-      // Add fields in chunks of 25 (Discord's field limit)
-      for (let i = 0; i < fields.length; i += 25) {
-        const chunk = fields.slice(i, i + 25);
-        if (i === 0) {
-          embeds[embeds.length - 1].addFields(chunk);
-        } else {
-          embeds.push(new EmbedBuilder()
-            .setTitle(`${user.displayName}'s Challenges (cont.)`)
-            .setColor(0xC100FF)
-            .addFields(chunk)
-          );
-        }
-      }
-    });
-
-    console.log(`[Challenge][caller:${interaction.user.displayName}] requested all challenges displayed`);
-    await interaction.reply({ embeds: embeds });
-  }
-}
-
 async function listUserChallenges(interaction) {
   const target = interaction.options.getUser('target');
   const challenges = await challengedb.Challenges.findAll({ where: { userid: target.id } });
@@ -276,8 +222,6 @@ module.exports = {
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'add') {
       addChallenge(interaction);
-    } else if (subCommand === 'list-all') {
-      listAllChallenges(interaction);
     } else if (subCommand === 'list-user') {
       listUserChallenges(interaction);
     } else if (subCommand === 'remove') {
