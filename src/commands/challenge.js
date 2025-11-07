@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const challengedb = require('../database/challengedb');
 
 const challengeLimit = 5;
@@ -109,15 +109,21 @@ async function addChallenge(interaction) {
         cheats: cheats,
         allowpause: allowPause
       });
-      let timeString = 'day';
-      if (timeFrame === 'daily') {
-        timeString = 'day';
-      } else if (timeFrame === 'weekly') {
-        timeString = 'week';
-      } else if (timeFrame === 'monthly') {
-        timeString = 'month';
-      }
-      await interaction.reply(`<@${interaction.user.id}> is adding their '${name}' challenge.\nEvery ${timeString} they will do '${description}'\nThey will ${allowPause ? '' : 'not ' }allow pauses\nThey are allowing ${cheats} cheats per ${timeString}.`);
+      const timeFrameString = timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)
+
+      const embed = new EmbedBuilder()
+        .setTitle('New Challenge')
+        .setColor(0xC100FF)
+        .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
+        .setDescription(`**${interaction.user.username}** has added their '${name}' challenge!`)
+        .addFields(
+          { name: 'Description', value: description, inline: false },
+          { name: 'Time Frame', value: timeFrameString, inline: true },
+          { name: 'Cheats Allowed', value: cheats.toString(), inline: true },
+          { name: 'Pauses Allowed', value: allowPause ? 'Yes' : 'No', inline: true }
+        );
+
+      await interaction.reply({ embeds: [embed] });
     }
   } catch (error) {
     console.log(`<@${interaction.user.id}> tried to add a challenge, but an error occurred. ${error}`);

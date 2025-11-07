@@ -105,7 +105,7 @@ async function show(interaction) {
       .setColor(0xA8DADC)
       .setDescription(formatLeaderboard(topLost, 'timeslost'));
 
-    await interaction.editReply({ embeds: [messagesEmbed, failedEmbed, shamedEmbed, lostEmbed]});
+    await interaction.editReply({ embeds: [messagesEmbed, failedEmbed, shamedEmbed, lostEmbed] });
   } catch (error) {
     console.error('Error fetching data for wrapped: ', error);
     await interaction.editReply('Error fetching wrapped data. Please try again later.');
