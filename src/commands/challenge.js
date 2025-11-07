@@ -123,10 +123,11 @@ async function addChallenge(interaction) {
           { name: 'Pauses Allowed', value: allowPause ? 'Yes' : 'No', inline: true }
         );
 
+      console.log(`[Challenge] [${interaction.user.displayName}] added a new challenge`);
       await interaction.reply({ embeds: [embed] });
     }
   } catch (error) {
-    console.log(`<@${interaction.user.id}> tried to add a challenge, but an error occurred. ${error}`);
+    console.log(`[Challenge] [${interaction.user.displayName}] tried to add a challenge, but an error occurred. ${error}`);
     await interaction.reply('Failed to add a challenge, try again');
   }
 }
@@ -226,6 +227,7 @@ module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
+    console.log(`[Challenge] [${interaction.user.displayName}] requested challenge subcommand '${interaction.options.getSubcommand()}'`);
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'add') {
       addChallenge(interaction);
@@ -238,7 +240,7 @@ module.exports = {
     } else if (subCommand === 'cheat') {
       cheatDay(interaction);
     } else {
-      await interaction.reply('NYI');
+      await interaction.reply('Invalid option');
     }
   }
 };
