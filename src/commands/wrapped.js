@@ -41,14 +41,12 @@ async function show(interaction) {
       raw: true
     });
 
-    const guild = interaction.guild;
-
     const allUsers = new Set();
     [topMessages, topMissed, topShamed, topLost].forEach(list => {
       list.forEach(u => allUsers.add(String(u.userid)));
     });
 
-    const userMap = await UserFetcher.fetchUsersByIds(Array.from(allUsers), guild, interaction.client);
+    const userMap = await UserFetcher.fetchUsersByIds(Array.from(allUsers), interaction.guild, interaction.client);
 
     const formatLeaderboard = (users, statKey) => {
       console.log(`[Wrapped] formatLeaderboard called with ${users.length} users for stat: ${statKey}`);
@@ -99,30 +97,7 @@ module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
-    const subCommand = interaction.options.getSubcommand();
-    if (subCommand === 'show') {
-      await show(interaction);
-    } else {
-      await interaction.reply('Unknown command');
-    }
-  }
-};
-    const lostEmbed = new EmbedBuilder()
-      .setTitle('Most Times Lost')
-      .setColor(0xA8DADC)
-      .setDescription(formatLeaderboard(topLost, 'timeslost'));
-
-    await interaction.editReply({ embeds: [messagesEmbed, failedEmbed, shamedEmbed, lostEmbed] });
-  } catch (error) {
-    console.error('Error fetching data for wrapped: ', error);
-    await interaction.editReply('Error fetching wrapped data. Please try again later.');
-  }
-}
-
-module.exports = {
-  cooldown: 5,
-  data: data,
-  async execute(interaction) {
+    console.log(`[Wrapped][caller:${interaction.user.displayName}] requested wrapped subcommand '${interaction.options.getSubcommand()}'`);
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'show') {
       await show(interaction);

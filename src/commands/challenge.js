@@ -1,5 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const challengedb = require('../database/challengedb');
+const UserFetcher = require('../utils/user-fetcher');
 
 const challengeLimit = 10;
 
@@ -109,7 +110,7 @@ async function addChallenge(interaction) {
         cheats: cheats,
         allowpause: allowPause
       });
-      const timeFrameString = timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)
+      const timeFrameString = timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1);
 
       const embed = new EmbedBuilder()
         .setTitle('New Challenge')
@@ -123,23 +124,39 @@ async function addChallenge(interaction) {
           { name: 'Pauses Allowed', value: allowPause ? 'Yes' : 'No', inline: true }
         );
 
-      console.log(`[Challenge] [${interaction.user.displayName}] added a new challenge`);
+      console.log(`[Challenge][caller:${interaction.user.displayName}] added a new challenge`);
       await interaction.reply({ embeds: [embed] });
     }
   } catch (error) {
-    console.log(`[Challenge] [${interaction.user.displayName}] tried to add a challenge, but an error occurred. ${error}`);
+    console.log(`[Challenge][caller:${interaction.user.displayName}] tried to add a challenge, but an error occurred. ${error}`);
     await interaction.reply('Failed to add a challenge, try again');
   }
 }
 
 async function listAllChallenges(interaction) {
   const challenges = await challengedb.Challenges.findAll();
-  if (challenges.length > 0) {
-    const challengesString = challenges.map(c => `<@${c.userid}> - ${c.name} - ${c.description}`).join('\n');
-
-    await interaction.reply(`All current challenges are:\n${challengesString}`);
-  } else {
+  if (challenges.length == 0) {
     await interaction.reply('Could not find any challenges');
+  } else {
+    const allUsers = new Set();
+    challenges.forEach(c => {
+      allUsers.add(String(c.userid));
+    });
+    const userMap = await UserFetcher.fetchUsersByIds(Array.from(allUsers), interaction.guild, interaction.client);
+
+    const fields = [];
+    challenges.forEach(c => fields.push(
+      { name: `${userMap[c.userid].displayName} - ${c.name}`, value: c.description, inline: true }
+    ));
+
+    const challengesEmbed = new EmbedBuilder()
+      .setTitle('All Guild Challenges')
+      .setDescription('Every user challenge in the guild')
+      .setColor(0xC100FF)
+      .addFields(fields);
+
+    console.log(`[Challenge][caller:${interaction.user.displayName}] requested all challenges displayed`);
+    await interaction.reply({ embeds: [challengesEmbed] });
   }
 }
 
@@ -227,7 +244,7 @@ module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
-    console.log(`[Challenge] [${interaction.user.displayName}] requested challenge subcommand '${interaction.options.getSubcommand()}'`);
+    console.log(`[Challenge][caller:${interaction.user.displayName}] requested challenge subcommand '${interaction.options.getSubcommand()}'`);
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'add') {
       addChallenge(interaction);
