@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { isWrappedSeason } = require('../utils/wrapped-season-validator');
+const UserFetcher = require('../utils/user-fetcher');
 const wrappedDb = require('../database/wrappeddb');
 
 const data = new SlashCommandBuilder()
@@ -40,32 +41,12 @@ async function show(interaction) {
       raw: true
     });
 
-    const guild = interaction.guild;
-    const userMap = {};
-
     const allUsers = new Set();
     [topMessages, topMissed, topShamed, topLost].forEach(list => {
       list.forEach(u => allUsers.add(String(u.userid)));
     });
 
-    for (const userId of allUsers) {
-      try {
-        console.log(`[Wrapped] Attempting to fetch member from guild ${userId}...`);
-        const member = await guild.members.fetch(userId);
-        console.log(`[Wrapped] Successfully fetched member: ${member.displayName}`);
-        userMap[userId] = member.displayName;
-      } catch (error) {
-        console.log(`[Wrapped] Failed to fetch from guild: ${error.message}`);
-        try {
-          const user = await interaction.client.users.fetch(userId);
-          console.log(`[Wrapped] Successfully fetched user: ${user.username}`);
-          userMap[userId] = user.username;
-        } catch (error2) {
-          console.log(`[Wrapped] Failed to fetch user: ${error2.message}`);
-          userMap[userId] = `User ${userId}`;
-        }
-      }
-    }
+    const userMap = await UserFetcher.fetchUsersByIds(Array.from(allUsers), interaction.guild, interaction.client);
 
     const formatLeaderboard = (users, statKey) => {
       console.log(`[Wrapped] formatLeaderboard called with ${users.length} users for stat: ${statKey}`);
@@ -105,7 +86,7 @@ async function show(interaction) {
       .setColor(0xA8DADC)
       .setDescription(formatLeaderboard(topLost, 'timeslost'));
 
-    await interaction.editReply({ embeds: [messagesEmbed, failedEmbed, shamedEmbed, lostEmbed]});
+    await interaction.editReply({ embeds: [messagesEmbed, failedEmbed, shamedEmbed, lostEmbed] });
   } catch (error) {
     console.error('Error fetching data for wrapped: ', error);
     await interaction.editReply('Error fetching wrapped data. Please try again later.');
@@ -116,6 +97,7 @@ module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
+    console.log(`[Wrapped][caller:${interaction.user.displayName}] Used wrapped subcommand '${interaction.options.getSubcommand()}'`);
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'show') {
       await show(interaction);

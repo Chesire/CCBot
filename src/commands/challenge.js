@@ -1,7 +1,8 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const challengedb = require('../database/challengedb');
 
-const challengeLimit = 5;
+// Maximum that a user can have, change to be server defined in the future.
+const challengeLimit = 10;
 
 const data = new SlashCommandBuilder()
   .setName('challenge')
@@ -52,11 +53,6 @@ const data = new SlashCommandBuilder()
   )
   .addSubcommand(subCommand =>
     subCommand
-      .setName('list-all')
-      .setDescription('Lists all users challenges')
-  )
-  .addSubcommand(subCommand =>
-    subCommand
       .setName('list-user')
       .setDescription('Lists users challenges')
       .addUserOption(option =>
@@ -70,22 +66,6 @@ const data = new SlashCommandBuilder()
     subCommand
       .setName('remove')
       .setDescription('Removes a challenge from a user')
-  )
-  .addSubcommand(subCommand =>
-    subCommand
-      .setName('cheat')
-      .setDescription('Sets that today is a cheat day')
-  )
-  .addSubcommand(subCommand =>
-    subCommand
-      .setName('pause')
-      .setDescription('Sets a date for a pause day')
-      .addStringOption(option =>
-        option
-          .setName('reason')
-          .setDescription('Why the pause')
-          .setRequired(true)
-      )
   );
 
 async function addChallenge(interaction) {
@@ -109,88 +89,122 @@ async function addChallenge(interaction) {
         cheats: cheats,
         allowpause: allowPause
       });
-      let timeString = 'day';
-      if (timeFrame === 'daily') {
-        timeString = 'day';
-      } else if (timeFrame === 'weekly') {
-        timeString = 'week';
-      } else if (timeFrame === 'monthly') {
-        timeString = 'month';
-      }
-      await interaction.reply(`<@${interaction.user.id}> is adding their '${name}' challenge.\nEvery ${timeString} they will do '${description}'\nThey will ${allowPause ? '' : 'not ' }allow pauses\nThey are allowing ${cheats} cheats per ${timeString}.`);
+      const timeFrameString = timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1);
+
+      const embed = new EmbedBuilder()
+        .setTitle('New Challenge')
+        .setColor(0xC100FF)
+        .setThumbnail(interaction.user.displayAvatarURL())
+        .setDescription(`**${interaction.user.displayName}** has added their '${name}' challenge!`)
+        .addFields(
+          { name: 'Description', value: description, inline: false },
+          { name: 'Time Frame', value: timeFrameString, inline: true },
+          { name: 'Cheats Allowed', value: cheats.toString(), inline: true },
+          { name: 'Pauses Allowed', value: allowPause ? 'Yes' : 'No', inline: true }
+        );
+
+      console.log(`[Challenge][caller:${interaction.user.displayName}] Added a new challenge`);
+      await interaction.reply({ embeds: [embed] });
     }
   } catch (error) {
-    console.log(`<@${interaction.user.id}> tried to add a challenge, but an error occurred. ${error}`);
+    console.log(`[Challenge][caller:${interaction.user.displayName}] Tried to add a challenge, but an error occurred. ${error}`);
     await interaction.reply('Failed to add a challenge, try again');
-  }
-}
-
-async function listAllChallenges(interaction) {
-  const challenges = await challengedb.Challenges.findAll();
-  if (challenges.length > 0) {
-    const challengesString = challenges.map(c => `<@${c.userid}> - ${c.name} - ${c.description}`).join('\n');
-
-    await interaction.reply(`All current challenges are:\n${challengesString}`);
-  } else {
-    await interaction.reply('Could not find any challenges');
   }
 }
 
 async function listUserChallenges(interaction) {
   const target = interaction.options.getUser('target');
   const challenges = await challengedb.Challenges.findAll({ where: { userid: target.id } });
-  if (challenges.length > 0) {
-    const buttons = challenges.map(c =>
-      new ButtonBuilder()
-        .setCustomId(c.id.toString())
-        .setLabel(c.name)
-        .setStyle(ButtonStyle.Secondary)
-    );
-
-    const row = new ActionRowBuilder()
-      .addComponents(buttons);
-
-    const response = await interaction.reply({
-      content: `Current challenges for ${target}`,
-      components: [row]
-    });
-    const collectorFilter = i => i.user.id === interaction.user.id;
-
-    try {
-      const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
-      const challenge = await challengedb.Challenges.findOne({ where: { id: parseInt(confirmation.customId) } });
-      if (challenge) {
-        await confirmation.update({
-          content: `${challenge.id}: ${challenge.name} - ${challenge.description}`,
-          components: []
-        });
-      }
-    } catch {
-      await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
-    }
+  if (challenges.length == 0) {
+    console.log(`[Challenge][caller:${interaction.user.displayName}] Listed challenges for ${target.displayName} who has none`);
+    const embed = new EmbedBuilder()
+      .setTitle('User Challenges')
+      .setColor(0xC100FF)
+      .setThumbnail(target.displayAvatarURL())
+      .setDescription(`**${target.displayName}** has no active challenges.`);
+    await interaction.reply({ embeds: [embed] });
   } else {
-    await interaction.reply('Could not find any challenges for that user');
+    const fields = challenges.map(c => ({
+      name: c.name,
+      value: `**Description:** ${c.description}\n**Timeframe:** ${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? 'Yes' : 'No'}`,
+      inline: false
+    }));
+
+    // Split fields into chunks of 25 (Discord's field limit per embed)
+    const embeds = [];
+    for (let i = 0; i < fields.length; i += 25) {
+      const chunk = fields.slice(i, i + 25);
+      const pageNum = Math.floor(i / 25) + 1;
+      const totalPages = Math.ceil(fields.length / 25);
+
+      embeds.push(new EmbedBuilder()
+        .setTitle(`${target.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ''}`)
+        .setColor(0xC100FF)
+        .setThumbnail(target.displayAvatarURL())
+        .addFields(chunk)
+      );
+    }
+
+    console.log(`[Challenge][caller:${interaction.user.displayName}] Listed ${challenges.length} challenge(s) for ${target.displayName}`);
+    try {
+      await interaction.reply({ embeds: embeds });
+    } catch (error) {
+      console.error(`[Challenge][caller:${interaction.user.displayName}] Error sending challenge list embeds: ${error}`);
+      await interaction.reply({ content: 'Failed to display challenges. Please try again later.', ephemeral: true });
+    }
   }
 }
 
 async function removeChallenge(interaction) {
   const targetUser = interaction.user;
   const challenges = await challengedb.Challenges.findAll({ where: { userid: targetUser.id } });
-  if (challenges.length > 0) {
+  if (challenges.length == 0) {
+    console.log(`[Challenge][caller:${interaction.user.displayName}] No challenges to remove for user`);
+    await interaction.reply({ content: 'Could not find any challenges for you', ephemeral: true });
+  } else {
+    const fields = challenges.map(c => ({
+      name: c.name,
+      value: `**Description:** ${c.description}\n**Timeframe:** ${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? 'Yes' : 'No'}`,
+      inline: false
+    }));
+
+    // Split fields into chunks of 25 (Discord's field limit per embed)
+    const chunkSize = 25;
+    const embeds = [];
+    for (let i = 0; i < fields.length; i += chunkSize) {
+      const chunk = fields.slice(i, i + chunkSize);
+      const pageNum = Math.floor(i / chunkSize) + 1;
+      const totalPages = Math.ceil(fields.length / chunkSize);
+
+      embeds.push(new EmbedBuilder()
+        .setTitle(`${targetUser.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ''}`)
+        .setColor(0xC100FF)
+        .setThumbnail(targetUser.displayAvatarURL())
+        .addFields(chunk)
+      );
+    }
+
+    // Create buttons for each challenge to remove
     const buttons = challenges.map(c =>
       new ButtonBuilder()
         .setCustomId(c.id.toString())
-        .setLabel(c.name)
-        .setStyle(ButtonStyle.Secondary)
+        .setLabel(`Remove: ${c.name}`)
+        .setStyle(ButtonStyle.Danger)
     );
 
-    const row = new ActionRowBuilder()
-      .addComponents(buttons);
+    // Split buttons into rows (max 5 per row)
+    const rows = [];
+    for (let i = 0; i < buttons.length; i += 5) {
+      const chunk = buttons.slice(i, i + 5);
+      rows.push(new ActionRowBuilder().addComponents(chunk));
+    }
 
     const response = await interaction.reply({
-      content: `Current challenges for ${targetUser}`,
-      components: [row]
+      embeds: embeds,
+      components: rows,
+      ephemeral: true
     });
+
     const collectorFilter = i => i.user.id === interaction.user.id;
 
     try {
@@ -198,41 +212,41 @@ async function removeChallenge(interaction) {
       const challenge = await challengedb.Challenges.findOne({ where: { id: parseInt(confirmation.customId) } });
       if (challenge) {
         await challengedb.Challenges.destroy({ where: { id: parseInt(confirmation.customId) } });
-        await confirmation.update({
-          content: `Challenge '${challenge.name}' successfully deleted`,
-          components: []
-        });
+        console.log(`[Challenge][caller:${interaction.user.displayName}] Removed challenge '${challenge.name}'`);
+
+        const deleteEmbed = new EmbedBuilder()
+          .setTitle('Challenge Removed')
+          .setColor(0xC100FF)
+          .setThumbnail(targetUser.displayAvatarURL())
+          .setDescription(`**${targetUser.displayName}** has removed their '${challenge.name}' challenge.`);
+
+        await confirmation.deferUpdate();
+        await response.delete();
+        await interaction.channel.send({ embeds: [deleteEmbed] });
+      } else {
+        console.log(`[Challenge][caller:${interaction.user.displayName}] Tried to remove challenge '${confirmation.customId}' but challenge came back null`);
+        await confirmation.update({ content: 'Failed to remove challenge, try again', components: [], ephemeral: true });
       }
     } catch {
-      await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+      await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [], ephemeral: true });
     }
-  } else {
-    await interaction.reply('Could not find any challenges for that user');
   }
-}
-
-async function cheatDay(interaction) {
-  const targetUser = interaction.user;
-  await interaction.reply(`${targetUser} is taking today as a cheat day.`);
 }
 
 module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
+    console.log(`[Challenge][caller:${interaction.user.displayName}] Used challenge subcommand '${interaction.options.getSubcommand()}'`);
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === 'add') {
       addChallenge(interaction);
-    } else if (subCommand === 'list-all') {
-      listAllChallenges(interaction);
     } else if (subCommand === 'list-user') {
       listUserChallenges(interaction);
     } else if (subCommand === 'remove') {
       removeChallenge(interaction);
-    } else if (subCommand === 'cheat') {
-      cheatDay(interaction);
     } else {
-      await interaction.reply('NYI');
+      await interaction.reply('Invalid option');
     }
   }
 };
