@@ -150,6 +150,7 @@ async function listUserChallenges(interaction) {
       await interaction.reply({ embeds: embeds });
     } catch (error) {
       console.error(`[Challenge][caller:${interaction.user.displayName}] Error sending challenge list embeds: ${error}`);
+      await interaction.reply({ content: 'Failed to display challenges. Please try again later.', ephemeral: true });
     }
   }
 }
