@@ -245,7 +245,7 @@ async function removeChallenge(interaction) {
         await interaction.channel.send({ embeds: [deleteEmbed] });
       } else {
         console.log(`[Challenge][caller:${interaction.user.displayName}] Tried to remove challenge '${challenge.name}' but challenge came back null`);
-        await confirmation.update({ content: 'Confirmation not received within 1 minute, cancelling', components: [], ephemeral: true });
+        await confirmation.update({ content: 'Failed to remove challenge, try again', components: [], ephemeral: true });
       }
     } catch {
       await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [], ephemeral: true });
