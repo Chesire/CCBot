@@ -53,11 +53,6 @@ const data = new SlashCommandBuilder()
   )
   .addSubcommand(subCommand =>
     subCommand
-      .setName('list-all')
-      .setDescription('Lists all users challenges')
-  )
-  .addSubcommand(subCommand =>
-    subCommand
       .setName('list-user')
       .setDescription('Lists users challenges')
       .addUserOption(option =>
