@@ -71,17 +71,6 @@ const data = new SlashCommandBuilder()
     subCommand
       .setName('cheat')
       .setDescription('Sets that today is a cheat day')
-  )
-  .addSubcommand(subCommand =>
-    subCommand
-      .setName('pause')
-      .setDescription('Sets a date for a pause day')
-      .addStringOption(option =>
-        option
-          .setName('reason')
-          .setDescription('Why the pause')
-          .setRequired(true)
-      )
   );
 
 async function addChallenge(interaction) {
