@@ -66,11 +66,6 @@ const data = new SlashCommandBuilder()
     subCommand
       .setName('remove')
       .setDescription('Removes a challenge from a user')
-  )
-  .addSubcommand(subCommand =>
-    subCommand
-      .setName('cheat')
-      .setDescription('Sets that today is a cheat day')
   );
 
 async function addChallenge(interaction) {
@@ -237,11 +232,6 @@ async function removeChallenge(interaction) {
   }
 }
 
-async function cheatDay(interaction) {
-  const targetUser = interaction.user;
-  await interaction.reply(`${targetUser} is taking today as a cheat day.`);
-}
-
 module.exports = {
   cooldown: 5,
   data: data,
@@ -254,8 +244,6 @@ module.exports = {
       listUserChallenges(interaction);
     } else if (subCommand === 'remove') {
       removeChallenge(interaction);
-    } else if (subCommand === 'cheat') {
-      cheatDay(interaction);
     } else {
       await interaction.reply('Invalid option');
     }
