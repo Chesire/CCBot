@@ -189,11 +189,12 @@ async function removeChallenge(interaction) {
     }));
 
     // Split fields into chunks of 25 (Discord's field limit per embed)
+    const chunkSize = 25;
     const embeds = [];
-    for (let i = 0; i < fields.length; i += 25) {
-      const chunk = fields.slice(i, i + 25);
-      const pageNum = Math.floor(i / 25) + 1;
-      const totalPages = Math.ceil(fields.length / 25);
+    for (let i = 0; i < fields.length; i += chunkSize) {
+      const chunk = fields.slice(i, i + chunkSize);
+      const pageNum = Math.floor(i / chunkSize) + 1;
+      const totalPages = Math.ceil(fields.length / chunkSize);
 
       embeds.push(new EmbedBuilder()
         .setTitle(`${targetUser.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ''}`)
