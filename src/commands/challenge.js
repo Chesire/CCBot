@@ -244,7 +244,7 @@ async function removeChallenge(interaction) {
         await response.delete();
         await interaction.channel.send({ embeds: [deleteEmbed] });
       } else {
-        console.log(`[Challenge][caller:${interaction.user.displayName}] Tried to remove challenge '${challenge.name}' but challenge came back null`);
+        console.log(`[Challenge][caller:${interaction.user.displayName}] Tried to remove challenge '${confirmation.customId}' but challenge came back null`);
         await confirmation.update({ content: 'Failed to remove challenge, try again', components: [], ephemeral: true });
       }
     } catch {
