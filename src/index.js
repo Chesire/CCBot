@@ -10,7 +10,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.GuildScheduledEvents,
+    GatewayIntentBits.MessageContent,
   ]
 });
 client.commands = new Collection();
@@ -22,6 +23,7 @@ for (const command of commands) {
 
 const events = loadEvents();
 for (const event of events) {
+  console.log(`Loading event: ${event.name}`);
   if (event.once) {
     client.once(event.name, (...args) => event.execute(...args));
   } else {
