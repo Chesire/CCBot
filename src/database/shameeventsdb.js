@@ -1,5 +1,5 @@
-const { Sequelize } = require('sequelize');
-const path = require('path');
+const { Sequelize } = require("sequelize");
+const path = require("path");
 
 /**
  * ShameEventsDB - Tracks Discord Scheduled Events created when users are shamed
@@ -23,17 +23,17 @@ const path = require('path');
  *
  * Note: This tracks WHEN users were shamed (via scheduled events), not WHAT types of shame events occurred
  */
-const sequelize = new Sequelize('shameeventsdb', 'user', 'password', {
-  host: 'localhost',
-  dialect: 'sqlite',
+const sequelize = new Sequelize("shameeventsdb", "user", "password", {
+  host: "localhost",
+  dialect: "sqlite",
   logging: false,
   // SQLite only
-  storage: path.join(__dirname, '../../data/shameeventsdb.sqlite'),
+  storage: path.join(__dirname, "../../data/shameeventsdb.sqlite"),
 });
 
-const ShameEvents = sequelize.define('shameevents', {
+const ShameEvents = sequelize.define("shameevents", {
   userid: Sequelize.TEXT,
-  eventid: Sequelize.TEXT
+  eventid: Sequelize.TEXT,
 });
 
 module.exports = { ShameEvents };

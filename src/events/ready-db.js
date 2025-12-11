@@ -1,8 +1,8 @@
-const { Events } = require('discord.js');
-const admindb = require('../database/admindb');
-const challengedb = require('../database/challengedb');
-const shameeventsdb = require('../database/shameeventsdb');
-const wrappeddb = require('../database/wrappeddb');
+const { Events } = require("discord.js");
+const admindb = require("../database/admindb");
+const challengedb = require("../database/challengedb");
+const shameeventsdb = require("../database/shameeventsdb");
+const wrappeddb = require("../database/wrappeddb");
 
 module.exports = {
   name: Events.ClientReady,
@@ -15,6 +15,6 @@ module.exports = {
     shameeventsdb.ShameEvents.sync();
     wrappeddb.Wrapped.sync();
 
-    console.log('DBs Synced!');
-  }
+    console.log("DBs Synced!");
+  },
 };
