@@ -121,6 +121,7 @@ async function createEvent(guild, user) {
     },
     reason: ''
   });
+
   await shameEventsDb.ShameEvents.create({
     userid: user.id,
     eventid: newEvent.id
