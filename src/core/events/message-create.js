@@ -1,6 +1,6 @@
 const { Events } = require("discord.js");
-const adminDb = require("../database/admindb");
-const wrappedDb = require("../database/wrappeddb");
+const adminDb = require("../../features/admin/data/admindb");
+const wrappedDb = require("../../features/wrapped/data/wrappeddb");
 
 async function replyToPurple(message) {
   const randomChance = Math.floor(Math.random() * 100);

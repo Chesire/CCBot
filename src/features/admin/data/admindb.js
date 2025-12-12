@@ -6,7 +6,7 @@ const sequelize = new Sequelize("admindb", "user", "password", {
   dialect: "sqlite",
   logging: false,
   // SQLite only
-  storage: path.join(__dirname, "../../data/admindb.sqlite"),
+  storage: path.join(__dirname, "../../../../data/admindb.sqlite"),
 });
 
 const Admin = sequelize.define("admin", {

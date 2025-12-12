@@ -6,7 +6,7 @@ const sequelize = new Sequelize("challengedb", "user", "password", {
   dialect: "sqlite",
   logging: false,
   // SQLite only
-  storage: path.join(__dirname, "../../data/challengedb.sqlite"),
+  storage: path.join(__dirname, "../../../../data/challengedb.sqlite"),
 });
 
 const Challenges = sequelize.define("challenges", {

@@ -1,7 +1,7 @@
 const { Events } = require("discord.js");
 const { GuildScheduledEventStatus } = require("discord-api-types/v10");
-const adminDb = require("../database/admindb");
-const shameEventsDb = require("../database/shameeventsdb");
+const adminDb = require("../../features/admin/data/admindb");
+const shameEventsDb = require("../../features/shame/data/shameeventsdb");
 
 function getStatusName(status) {
   const statusNames = {

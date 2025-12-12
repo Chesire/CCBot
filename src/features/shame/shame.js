@@ -3,9 +3,9 @@ const {
   GuildScheduledEventEntityType,
   GuildScheduledEventPrivacyLevel,
 } = require("discord.js");
-const adminDb = require("../database/admindb");
-const shameEventsDb = require("../database/shameeventsdb");
-const wrappedDb = require("../database/wrappeddb");
+const adminDb = require("../admin/data/admindb");
+const shameEventsDb = require("./data/shameeventsdb");
+const wrappedDb = require("../wrapped/data/wrappeddb");
 
 const weekExtra = 7 * 24 * 60 * 60 * 1000;
 
