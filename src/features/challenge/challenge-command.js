@@ -106,7 +106,7 @@ async function listUserChallenges(interaction) {
 
   const challenges = await challengeService.listUserChallenges(target.id);
 
-  if (challenges.length == 0) {
+  if (challenges.length === 0) {
     const embed = challengePresentation.buildEmptyListChallengeEmbed(target);
     console.log(
       `[ChallengeCommand] listed challenges for ${target.displayName} who has none`,
