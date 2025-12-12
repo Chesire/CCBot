@@ -5,7 +5,6 @@ const {
   SlashCommandBuilder,
   EmbedBuilder,
 } = require("discord.js");
-const challengedb = require("./data/challengedb");
 const challengeService = require("../challenge/service/challenge-service");
 
 const data = new SlashCommandBuilder()
