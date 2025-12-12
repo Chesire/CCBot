@@ -69,3 +69,5 @@ const challengeService = {
     }
   },
 };
+
+module.exports = challengeService;

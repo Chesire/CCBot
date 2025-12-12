@@ -69,9 +69,7 @@ const data = new SlashCommandBuilder()
   );
 
 async function addChallenge(interaction) {
-  console.log(
-    `[ChallengeCommand][caller:${interaction.user.displayName}] is attempting to add a new challenge`,
-  );
+  console.log(`[ChallengeCommand] attempting to add a new challenge`);
 
   try {
     const name = interaction.options.getString("name");
@@ -91,14 +89,12 @@ async function addChallenge(interaction) {
       },
     );
 
-    console.log(
-      `[ChallengeCommand][caller:${interaction.user.displayName}] added a new challenge`,
-    );
+    console.log(`[ChallengeCommand] added a new challenge`);
     const embed = _buildAddChallengeEmbed(interaction.user, challenge);
     await interaction.reply({ embeds: [embed] });
   } catch (error) {
     console.log(
-      `[ChallengeCommand][caller:${interaction.user.displayName}] tried to add a challenge, but an error occurred. ${error}`,
+      `[ChallengeCommand] tried to add a challenge, but an error occurred. ${error}`,
     );
     await interaction.reply(error.message);
   }
@@ -106,7 +102,7 @@ async function addChallenge(interaction) {
 
 function _buildAddChallengeEmbed(user, challenge) {
   const timeFrameString =
-    timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1);
+    challenge.timeframe.charAt(0).toUpperCase() + challenge.timeframe.slice(1);
   return new EmbedBuilder()
     .setTitle("New Challenge")
     .setColor(0xc100ff)
@@ -133,7 +129,7 @@ function _buildAddChallengeEmbed(user, challenge) {
 async function listUserChallenges(interaction) {
   const target = interaction.options.getUser("target");
   console.log(
-    `[ChallengeCommand][caller:${interaction.user.displayName}] is attempting to list challenges for user ${target.displayName}`,
+    `[ChallengeCommand] attempting to list challenges for user ${target.displayName}`,
   );
 
   const challenges = await challengeService.listUserChallenges(target.id);
@@ -141,13 +137,13 @@ async function listUserChallenges(interaction) {
   if (challenges.length == 0) {
     const embed = _buildEmptyListChallengeEmbed(target);
     console.log(
-      `[ChallengeCommand][caller:${interaction.user.displayName}] listed challenges for ${target.displayName} who has none`,
+      `[ChallengeCommand] listed challenges for ${target.displayName} who has none`,
     );
     await interaction.reply({ embeds: [embed] });
   } else {
     const embeds = _buildListChallengesEmbed(target, challenges);
     console.log(
-      `[ChallengeCommand][caller:${interaction.user.displayName}] listed ${challenges.length} challenge(s) for ${target.displayName}`,
+      `[ChallengeCommand] listed ${challenges.length} challenge(s) for ${target.displayName}`,
     );
     await interaction.reply({ embeds: embeds });
   }
@@ -191,15 +187,11 @@ function _buildListChallengesEmbed(user, challenges) {
 }
 
 async function removeChallenge(interaction) {
-  console.log(
-    `[ChallengeCommand][caller:${interaction.user.displayName}] is attempting to remove a challenge`,
-  );
+  console.log(`[ChallengeCommand] attempting to remove a challenge`);
   const targetUser = interaction.user;
   const challenges = await challengeService.listUserChallenges(targetUser.id);
   if (challenges.length == 0) {
-    console.log(
-      `[ChallengeCommand][caller:${interaction.user.displayName}] no challenges to remove for user`,
-    );
+    console.log(`[ChallengeCommand] no challenges to remove for user`);
     await interaction.reply({
       content: "Could not find any challenges for you",
       ephemeral: true,
@@ -223,9 +215,7 @@ async function removeChallenge(interaction) {
       time: 60_000,
     });
   } catch {
-    console.log(
-      `[ChallengeCommand][caller:${interaction.user.displayName}] did not confirm challenge removal in time`,
-    );
+    console.log(`[ChallengeCommand] did not confirm challenge removal in time`);
     await interaction.editReply({
       content: "Confirmation not received within 1 minute, cancelling",
       components: [],
@@ -244,14 +234,14 @@ async function removeChallenge(interaction) {
     );
 
     console.log(
-      `[ChallengeCommand][caller:${interaction.user.displayName}] removed challenge '${removedChallenge.name}'`,
+      `[ChallengeCommand] removed challenge '${removedChallenge.name}'`,
     );
     await confirmation.deferUpdate();
     await response.delete();
     await interaction.channel.send({ embeds: [deleteEmbed] });
   } catch (error) {
     console.log(
-      `[ChallengeCommand][caller:${interaction.user.displayName}] tried to remove challenge '${confirmation.customId}' but failed`,
+      `[ChallengeCommand] tried to remove challenge '${confirmation.customId}' but failed`,
     );
     await confirmation.update({
       content: "Failed to remove challenge, try again",
@@ -295,7 +285,7 @@ module.exports = {
   data: data,
   async execute(interaction) {
     console.log(
-      `[Challenge][caller:${interaction.user.displayName}] Used challenge subcommand '${interaction.options.getSubcommand()}'`,
+      `[ChallengeCommand][caller:${interaction.user.displayName}] used challenge subcommand '${interaction.options.getSubcommand()}'`,
     );
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === "add") {
