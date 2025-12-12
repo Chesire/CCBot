@@ -1,10 +1,5 @@
-const {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  SlashCommandBuilder,
-  EmbedBuilder,
-} = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
+const challengePresentation = require("../challenge/presentation/challenge-presentation");
 const challengeService = require("../challenge/service/challenge-service");
 
 const data = new SlashCommandBuilder()
@@ -90,7 +85,10 @@ async function addChallenge(interaction) {
     );
 
     console.log(`[ChallengeCommand] added a new challenge`);
-    const embed = _buildAddChallengeEmbed(interaction.user, challenge);
+    const embed = challengePresentation.buildAddChallengeEmbed(
+      interaction.user,
+      challenge,
+    );
     await interaction.reply({ embeds: [embed] });
   } catch (error) {
     console.log(
@@ -98,32 +96,6 @@ async function addChallenge(interaction) {
     );
     await interaction.reply(error.message);
   }
-}
-
-function _buildAddChallengeEmbed(user, challenge) {
-  const timeFrameString =
-    challenge.timeframe.charAt(0).toUpperCase() + challenge.timeframe.slice(1);
-  return new EmbedBuilder()
-    .setTitle("New Challenge")
-    .setColor(0xc100ff)
-    .setThumbnail(user.displayAvatarURL())
-    .setDescription(
-      `**${user.displayName}** has added their '${challenge.name}' challenge!`,
-    )
-    .addFields(
-      { name: "Description", value: challenge.description, inline: false },
-      { name: "Time Frame", value: timeFrameString, inline: true },
-      {
-        name: "Cheats Allowed",
-        value: challenge.cheats.toString(),
-        inline: true,
-      },
-      {
-        name: "Pauses Allowed",
-        value: challenge.allowpause ? "Yes" : "No",
-        inline: true,
-      },
-    );
 }
 
 async function listUserChallenges(interaction) {
@@ -135,55 +107,21 @@ async function listUserChallenges(interaction) {
   const challenges = await challengeService.listUserChallenges(target.id);
 
   if (challenges.length == 0) {
-    const embed = _buildEmptyListChallengeEmbed(target);
+    const embed = challengePresentation.buildEmptyListChallengeEmbed(target);
     console.log(
       `[ChallengeCommand] listed challenges for ${target.displayName} who has none`,
     );
     await interaction.reply({ embeds: [embed] });
   } else {
-    const embeds = _buildListChallengesEmbed(target, challenges);
+    const embeds = challengePresentation.buildListChallengesEmbed(
+      target,
+      challenges,
+    );
     console.log(
       `[ChallengeCommand] listed ${challenges.length} challenge(s) for ${target.displayName}`,
     );
     await interaction.reply({ embeds: embeds });
   }
-}
-
-function _buildEmptyListChallengeEmbed(user) {
-  return new EmbedBuilder()
-    .setTitle("User Challenges")
-    .setColor(0xc100ff)
-    .setThumbnail(user.displayAvatarURL())
-    .setDescription(`**${user.displayName}** has no active challenges.`);
-}
-
-function _buildListChallengesEmbed(user, challenges) {
-  const fields = challenges.map((c) => ({
-    name: c.name,
-    value: `**Description:** ${c.description}\n**Timeframe:** ${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? "Yes" : "No"}`,
-    inline: false,
-  }));
-
-  // Split fields into chunks of 25 (Discord's field limit per embed)
-  const chunkSize = 25;
-  const embeds = [];
-  for (let i = 0; i < fields.length; i += chunkSize) {
-    const chunk = fields.slice(i, i + chunkSize);
-    const pageNum = Math.floor(i / chunkSize) + 1;
-    const totalPages = Math.ceil(fields.length / chunkSize);
-
-    embeds.push(
-      new EmbedBuilder()
-        .setTitle(
-          `${user.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ""}`,
-        )
-        .setColor(0xc100ff)
-        .setThumbnail(user.displayAvatarURL())
-        .addFields(chunk),
-    );
-  }
-
-  return embeds;
 }
 
 async function removeChallenge(interaction) {
@@ -199,8 +137,11 @@ async function removeChallenge(interaction) {
     return;
   }
 
-  const embeds = _buildListChallengesEmbed(targetUser, challenges);
-  const rows = _buildDeleteButtons(challenges);
+  const embeds = challengePresentation.buildListChallengesEmbed(
+    targetUser,
+    challenges,
+  );
+  const rows = challengePresentation.buildDeleteButtons(challenges);
   const response = await interaction.reply({
     embeds: embeds,
     components: rows,
@@ -228,7 +169,7 @@ async function removeChallenge(interaction) {
     const removedChallenge = await challengeService.removeChallenge(
       parseInt(confirmation.customId),
     );
-    const deleteEmbed = _buildChallengeRemovedEmbed(
+    const deleteEmbed = challengePresentation.buildChallengeRemovedEmbed(
       interaction.user,
       removedChallenge,
     );
@@ -249,35 +190,6 @@ async function removeChallenge(interaction) {
       ephemeral: true,
     });
   }
-}
-
-function _buildDeleteButtons(challenges) {
-  // Create buttons for each challenge to remove
-  const buttons = challenges.map((c) =>
-    new ButtonBuilder()
-      .setCustomId(c.id.toString())
-      .setLabel(`Remove: ${c.name}`)
-      .setStyle(ButtonStyle.Danger),
-  );
-
-  // Split buttons into rows (max 5 per row)
-  const rows = [];
-  for (let i = 0; i < buttons.length; i += 5) {
-    const chunk = buttons.slice(i, i + 5);
-    rows.push(new ActionRowBuilder().addComponents(chunk));
-  }
-
-  return rows;
-}
-
-function _buildChallengeRemovedEmbed(user, challenge) {
-  return new EmbedBuilder()
-    .setTitle("Challenge Removed")
-    .setColor(0xc100ff)
-    .setThumbnail(user.displayAvatarURL())
-    .setDescription(
-      `**${user.displayName}** has removed their '${challenge.name}' challenge.`,
-    );
 }
 
 module.exports = {
