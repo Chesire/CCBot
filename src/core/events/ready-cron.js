@@ -1,6 +1,6 @@
 const { Events } = require("discord.js");
 const cron = require("cron");
-const token = require("../../config.json");
+const token = require("../../../config.json");
 const admindb = require("../../features/admin/data/admindb");
 const challengedb = require("../../features/challenge/data/challengedb");
 

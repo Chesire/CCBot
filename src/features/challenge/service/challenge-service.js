@@ -1,4 +1,4 @@
-const challengedb = require("./data/challengedb");
+const challengedb = require("../data/challengedb");
 
 const challengeService = {
   // Maximum that a user can have, change to be server defined in the future.
