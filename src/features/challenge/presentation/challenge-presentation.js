@@ -6,10 +6,12 @@ const {
 } = require("discord.js");
 
 const challengePresentation = {
+  _formatTimeframe(timeframe) {
+    return timeframe.charAt(0).toUpperCase() + timeframe.slice(1);
+  },
+
   buildAddChallengeEmbed(user, challenge) {
-    const timeFrameString =
-      challenge.timeframe.charAt(0).toUpperCase() +
-      challenge.timeframe.slice(1);
+    const timeFrameString = this._formatTimeframe(challenge.timeframe);
     return new EmbedBuilder()
       .setTitle("New Challenge")
       .setColor(0xc100ff)
@@ -44,7 +46,7 @@ const challengePresentation = {
   buildListChallengesEmbed(user, challenges) {
     const fields = challenges.map((c) => ({
       name: c.name,
-      value: `**Description:** ${c.description}\n**Timeframe:** ${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? "Yes" : "No"}`,
+      value: `**Description:** ${c.description}\n**Timeframe:** ${this._formatTimeframe(c.timeframe)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? "Yes" : "No"}`,
       inline: false,
     }));
 
