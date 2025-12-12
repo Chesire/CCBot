@@ -6,7 +6,7 @@ const sequelize = new Sequelize("wrappeddb", "user", "password", {
   dialect: "sqlite",
   logging: false,
   // SQLite only
-  storage: path.join(__dirname, "../../data/wrappeddb.sqlite"),
+  storage: path.join(__dirname, "../../../../data/wrappeddb.sqlite"),
 });
 
 const Wrapped = sequelize.define("wrapped", {
