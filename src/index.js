@@ -1,8 +1,8 @@
 // Require the necessary discord.js classes
 const { Client, Collection, GatewayIntentBits } = require("discord.js");
 const { token } = require("../config.json");
-const { loadCommands } = require("./utils/command-loader");
-const { loadEvents } = require("./utils/event-loader");
+const { loadCommands } = require("./core/loaders/command-loader");
+const { loadEvents } = require("./core/loaders/event-loader");
 
 const client = new Client({
   intents: [

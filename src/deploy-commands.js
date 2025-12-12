@@ -1,6 +1,6 @@
 const { REST, Routes } = require("discord.js");
 const { clientId, guildId, token } = require("../config.json");
-const { loadCommands } = require("./utils/command-loader");
+const { loadCommands } = require("./core/loaders/command-loader");
 
 const commands = loadCommands().map((command) => command.data.toJSON());
 

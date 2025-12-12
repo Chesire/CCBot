@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { isWrappedSeason } = require("../utils/wrapped-season-validator");
-const UserFetcher = require("../utils/user-fetcher");
+const { isWrappedSeason } = require("../core/utils/wrapped-season-validator");
+const UserFetcher = require("../core/utils/user-fetcher");
 const wrappedDb = require("../database/wrappeddb");
 
 const data = new SlashCommandBuilder()
