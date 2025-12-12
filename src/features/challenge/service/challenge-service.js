@@ -4,17 +4,9 @@ const challengeService = {
   // Maximum that a user can have, change to be server defined in the future.
   CHALLENGE_LIMIT: 10,
 
-  async addChallenge(
-    userId,
-    userDisplayName,
-    name,
-    description,
-    timeFrame,
-    cheats,
-    allowPause,
-  ) {
+  async addChallenge(user, challengeData) {
     const usersChallenges = await challengedb.Challenges.findAll({
-      where: { userid: userId },
+      where: { userid: user.id },
     });
     if (usersChallenges.length >= this.CHALLENGE_LIMIT) {
       console.log(
@@ -25,13 +17,13 @@ const challengeService = {
 
     try {
       const newChallenge = await challengedb.Challenges.create({
-        name: name,
-        description: description,
-        timeframe: timeFrame,
-        username: userDisplayName,
-        userid: userId.toString(),
-        cheats: cheats,
-        allowpause: allowPause,
+        name: challengeData.name,
+        description: challengeData.description,
+        timeframe: challengeData.timeFrame,
+        username: user.displayName,
+        userid: user.id.toString(),
+        cheats: challengeData.cheats,
+        allowpause: challengeData.allowPause,
       });
       return newChallenge;
     } catch (error) {

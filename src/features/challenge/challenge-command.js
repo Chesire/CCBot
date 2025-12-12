@@ -82,13 +82,14 @@ async function addChallenge(interaction) {
     const allowPause = interaction.options.getBoolean("allow-pause");
 
     const challenge = await challengeService.addChallenge(
-      interaction.user.id,
-      interaction.user.displayName,
-      name,
-      description,
-      timeFrame,
-      cheats,
-      allowPause,
+      { id: interaction.user.id, displayName: interaction.user.displayName },
+      {
+        name: name,
+        description: description,
+        timeFrame: timeFrame,
+        cheats: cheats,
+        allowPause: allowPause,
+      },
     );
     const timeFrameString =
       timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1);
