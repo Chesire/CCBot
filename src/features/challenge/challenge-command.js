@@ -5,7 +5,7 @@ const {
   SlashCommandBuilder,
   EmbedBuilder,
 } = require("discord.js");
-const challengedb = require("../database/challengedb");
+const challengedb = require("./data/challengedb");
 
 // Maximum that a user can have, change to be server defined in the future.
 const challengeLimit = 10;
