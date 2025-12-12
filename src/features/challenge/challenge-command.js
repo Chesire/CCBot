@@ -6,9 +6,7 @@ const {
   EmbedBuilder,
 } = require("discord.js");
 const challengedb = require("./data/challengedb");
-
-// Maximum that a user can have, change to be server defined in the future.
-const challengeLimit = 10;
+const challengeService = require("../challenge/service/challenge-service");
 
 const data = new SlashCommandBuilder()
   .setName("challenge")
@@ -72,61 +70,59 @@ const data = new SlashCommandBuilder()
   );
 
 async function addChallenge(interaction) {
-  const name = interaction.options.getString("name");
-  const description = interaction.options.getString("description");
-  const timeFrame = interaction.options.getString("time-frame");
-  const cheats = interaction.options.getNumber("cheats");
-  const allowPause = interaction.options.getBoolean("allow-pause");
+  console.log(
+    `[ChallengeCommand][caller:${interaction.user.displayName}] is attempting to add a new challenge`,
+  );
 
   try {
-    const usersChallenges = await challengedb.Challenges.findAll({
-      where: { userid: interaction.user.id },
-    });
-    if (usersChallenges.length >= challengeLimit) {
-      await interaction.reply(
-        "Too many challenges active, delete one to add another.",
-      );
-    } else {
-      await challengedb.Challenges.create({
-        name: name,
-        description: description,
-        timeframe: timeFrame,
-        username: interaction.user.displayName,
-        userid: interaction.user.id.toString(),
-        cheats: cheats,
-        allowpause: allowPause,
-      });
-      const timeFrameString =
-        timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1);
+    const name = interaction.options.getString("name");
+    const description = interaction.options.getString("description");
+    const timeFrame = interaction.options.getString("time-frame");
+    const cheats = interaction.options.getNumber("cheats");
+    const allowPause = interaction.options.getBoolean("allow-pause");
 
-      const embed = new EmbedBuilder()
-        .setTitle("New Challenge")
-        .setColor(0xc100ff)
-        .setThumbnail(interaction.user.displayAvatarURL())
-        .setDescription(
-          `**${interaction.user.displayName}** has added their '${name}' challenge!`,
-        )
-        .addFields(
-          { name: "Description", value: description, inline: false },
-          { name: "Time Frame", value: timeFrameString, inline: true },
-          { name: "Cheats Allowed", value: cheats.toString(), inline: true },
-          {
-            name: "Pauses Allowed",
-            value: allowPause ? "Yes" : "No",
-            inline: true,
-          },
-        );
-
-      console.log(
-        `[Challenge][caller:${interaction.user.displayName}] Added a new challenge`,
+    const challenge = await challengeService.addChallenge(
+      interaction.user.id,
+      interaction.user.displayName,
+      name,
+      description,
+      timeFrame,
+      cheats,
+      allowPause,
+    );
+    const timeFrameString =
+      timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1);
+    const embed = new EmbedBuilder()
+      .setTitle("New Challenge")
+      .setColor(0xc100ff)
+      .setThumbnail(interaction.user.displayAvatarURL())
+      .setDescription(
+        `**${interaction.user.displayName}** has added their '${challenge.name}' challenge!`,
+      )
+      .addFields(
+        { name: "Description", value: challenge.description, inline: false },
+        { name: "Time Frame", value: timeFrameString, inline: true },
+        {
+          name: "Cheats Allowed",
+          value: challenge.cheats.toString(),
+          inline: true,
+        },
+        {
+          name: "Pauses Allowed",
+          value: challenge.allowpause ? "Yes" : "No",
+          inline: true,
+        },
       );
-      await interaction.reply({ embeds: [embed] });
-    }
+
+    console.log(
+      `[ChallengeCommand][caller:${interaction.user.displayName}] added a new challenge`,
+    );
+    await interaction.reply({ embeds: [embed] });
   } catch (error) {
     console.log(
-      `[Challenge][caller:${interaction.user.displayName}] Tried to add a challenge, but an error occurred. ${error}`,
+      `[ChallengeCommand][caller:${interaction.user.displayName}] tried to add a challenge, but an error occurred. ${error}`,
     );
-    await interaction.reply("Failed to add a challenge, try again");
+    await interaction.reply(error.message);
   }
 }
 
@@ -305,7 +301,7 @@ module.exports = {
     );
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === "add") {
-      addChallenge(interaction);
+      await addChallenge(interaction);
     } else if (subCommand === "list-user") {
       listUserChallenges(interaction);
     } else if (subCommand === "remove") {
