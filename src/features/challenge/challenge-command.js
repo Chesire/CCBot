@@ -94,7 +94,7 @@ async function addChallenge(interaction) {
     console.log(
       `[ChallengeCommand] tried to add a challenge, but an error occurred. ${error}`,
     );
-    await interaction.reply(error.message);
+    await interaction.reply({ content: error.message, ephemeral: true });
   }
 }
 
