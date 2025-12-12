@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ChannelType } = require("discord.js");
-const adminDb = require("../database/admindb");
+const adminDb = require("./data/admindb");
 
 const data = new SlashCommandBuilder()
   .setName("admin")
