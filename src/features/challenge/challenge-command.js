@@ -91,33 +91,11 @@ async function addChallenge(interaction) {
         allowPause: allowPause,
       },
     );
-    const timeFrameString =
-      timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1);
-    const embed = new EmbedBuilder()
-      .setTitle("New Challenge")
-      .setColor(0xc100ff)
-      .setThumbnail(interaction.user.displayAvatarURL())
-      .setDescription(
-        `**${interaction.user.displayName}** has added their '${challenge.name}' challenge!`,
-      )
-      .addFields(
-        { name: "Description", value: challenge.description, inline: false },
-        { name: "Time Frame", value: timeFrameString, inline: true },
-        {
-          name: "Cheats Allowed",
-          value: challenge.cheats.toString(),
-          inline: true,
-        },
-        {
-          name: "Pauses Allowed",
-          value: challenge.allowpause ? "Yes" : "No",
-          inline: true,
-        },
-      );
 
     console.log(
       `[ChallengeCommand][caller:${interaction.user.displayName}] added a new challenge`,
     );
+    const embed = _buildAddChallengeEmbed(interaction.user, challenge);
     await interaction.reply({ embeds: [embed] });
   } catch (error) {
     console.log(
@@ -127,60 +105,86 @@ async function addChallenge(interaction) {
   }
 }
 
+function _buildAddChallengeEmbed(user, challenge) {
+  const timeFrameString =
+    timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1);
+  return new EmbedBuilder()
+    .setTitle("New Challenge")
+    .setColor(0xc100ff)
+    .setThumbnail(user.displayAvatarURL())
+    .setDescription(
+      `**${user.displayName}** has added their '${challenge.name}' challenge!`,
+    )
+    .addFields(
+      { name: "Description", value: challenge.description, inline: false },
+      { name: "Time Frame", value: timeFrameString, inline: true },
+      {
+        name: "Cheats Allowed",
+        value: challenge.cheats.toString(),
+        inline: true,
+      },
+      {
+        name: "Pauses Allowed",
+        value: challenge.allowpause ? "Yes" : "No",
+        inline: true,
+      },
+    );
+}
+
 async function listUserChallenges(interaction) {
   const target = interaction.options.getUser("target");
-  const challenges = await challengedb.Challenges.findAll({
-    where: { userid: target.id },
-  });
+  console.log(
+    `[ChallengeCommand][caller:${interaction.user.displayName}] is attempting to list challenges for user ${target.displayName}`,
+  );
+
+  const challenges = await challengeService.listUserChallenges(target.id);
+
   if (challenges.length == 0) {
+    const embed = _buildEmptyListChallengeEmbed(target);
     console.log(
-      `[Challenge][caller:${interaction.user.displayName}] Listed challenges for ${target.displayName} who has none`,
+      `[ChallengeCommand][caller:${interaction.user.displayName}] listed challenges for ${target.displayName} who has none`,
     );
-    const embed = new EmbedBuilder()
-      .setTitle("User Challenges")
-      .setColor(0xc100ff)
-      .setThumbnail(target.displayAvatarURL())
-      .setDescription(`**${target.displayName}** has no active challenges.`);
     await interaction.reply({ embeds: [embed] });
   } else {
-    const fields = challenges.map((c) => ({
-      name: c.name,
-      value: `**Description:** ${c.description}\n**Timeframe:** ${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? "Yes" : "No"}`,
-      inline: false,
-    }));
-
-    // Split fields into chunks of 25 (Discord's field limit per embed)
-    const embeds = [];
-    for (let i = 0; i < fields.length; i += 25) {
-      const chunk = fields.slice(i, i + 25);
-      const pageNum = Math.floor(i / 25) + 1;
-      const totalPages = Math.ceil(fields.length / 25);
-
-      embeds.push(
-        new EmbedBuilder()
-          .setTitle(
-            `${target.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ""}`,
-          )
-          .setColor(0xc100ff)
-          .setThumbnail(target.displayAvatarURL())
-          .addFields(chunk),
-      );
-    }
-
+    const embeds = _buildListChallengesEmbed(target, challenges);
     console.log(
-      `[Challenge][caller:${interaction.user.displayName}] Listed ${challenges.length} challenge(s) for ${target.displayName}`,
+      `[ChallengeCommand][caller:${interaction.user.displayName}] listed ${challenges.length} challenge(s) for ${target.displayName}`,
     );
-    try {
-      await interaction.reply({ embeds: embeds });
-    } catch (error) {
-      console.error(
-        `[Challenge][caller:${interaction.user.displayName}] Error sending challenge list embeds: ${error}`,
-      );
-      await interaction.reply({
-        content: "Failed to display challenges. Please try again later.",
-        ephemeral: true,
-      });
-    }
+    await interaction.reply({ embeds: embeds });
+  }
+}
+
+function _buildEmptyListChallengeEmbed(user) {
+  return new EmbedBuilder()
+    .setTitle("User Challenges")
+    .setColor(0xc100ff)
+    .setThumbnail(user.displayAvatarURL())
+    .setDescription(`**${user.displayName}** has no active challenges.`);
+}
+
+function _buildListChallengesEmbed(user, challenges) {
+  const fields = challenges.map((c) => ({
+    name: c.name,
+    value: `**Description:** ${c.description}\n**Timeframe:** ${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? "Yes" : "No"}`,
+    inline: false,
+  }));
+
+  // Split fields into chunks of 25 (Discord's field limit per embed)
+  const embeds = [];
+  for (let i = 0; i < fields.length; i += 25) {
+    const chunk = fields.slice(i, i + 25);
+    const pageNum = Math.floor(i / 25) + 1;
+    const totalPages = Math.ceil(fields.length / 25);
+
+    embeds.push(
+      new EmbedBuilder()
+        .setTitle(
+          `${user.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ""}`,
+        )
+        .setColor(0xc100ff)
+        .setThumbnail(target.displayAvatarURL())
+        .addFields(chunk),
+    );
   }
 }
 

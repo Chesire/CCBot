@@ -32,7 +32,16 @@ const challengeService = {
     }
   },
 
-  async listUserChallenges(userId) {},
+  async listUserChallenges(userId) {
+    try {
+      return await challengedb.Challenges.findAll({
+        where: { userid: userId },
+      });
+    } catch (error) {
+      console.log(`[ChallengeService] failed to retrieve challenges, ${error}`);
+      return [];
+    }
+  },
 
   async removeChallenge(challengeId) {},
 };
