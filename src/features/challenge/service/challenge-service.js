@@ -1,13 +1,11 @@
-const challengedb = require("../data/challengedb");
+const challengeRepository = require("../data/challenge-repository");
 
 const challengeService = {
   // Maximum that a user can have, change to be server defined in the future.
   CHALLENGE_LIMIT: 10,
 
   async addChallenge(user, challengeData) {
-    const usersChallenges = await challengedb.Challenges.findAll({
-      where: { userid: user.id },
-    });
+    const usersChallenges = await challengeRepository.findAllByUserId(user.id);
     if (usersChallenges.length >= this.CHALLENGE_LIMIT) {
       console.log(
         `[ChallengeService] failed to create challenge, user at limit`,
@@ -16,7 +14,7 @@ const challengeService = {
     }
 
     try {
-      const newChallenge = await challengedb.Challenges.create({
+      const newChallenge = await challengeRepository.create({
         name: challengeData.name,
         description: challengeData.description,
         timeframe: challengeData.timeFrame,
@@ -34,9 +32,7 @@ const challengeService = {
 
   async listUserChallenges(userId) {
     try {
-      return await challengedb.Challenges.findAll({
-        where: { userid: userId },
-      });
+      return await challengeRepository.findAllByUserId(userId);
     } catch (error) {
       console.log(`[ChallengeService] failed to retrieve challenges, ${error}`);
       return [];
@@ -44,15 +40,11 @@ const challengeService = {
   },
 
   async removeChallenge(challengeId) {
-    const challenge = await challengedb.Challenges.findOne({
-      where: { id: challengeId },
-    });
+    const challenge = await challengeRepository.findById(challengeId);
 
     if (challenge) {
       try {
-        await challengedb.Challenges.destroy({
-          where: { id: challengeId },
-        });
+        await challengeRepository.destroy(challengeId);
         console.log(
           `[ChallengeService] removed challenge '${challenge.name}' successfully`,
         );
