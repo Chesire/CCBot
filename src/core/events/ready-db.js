@@ -1,8 +1,8 @@
 const { Events } = require("discord.js");
-const admindb = require("../../database/admindb");
+const admindb = require("../../features/admin/data/admindb");
 const challengedb = require("../../features/challenge/data/challengedb");
-const shameeventsdb = require("../../database/shameeventsdb");
-const wrappeddb = require("../../database/wrappeddb");
+const shameeventsdb = require("../../features/shame/data/shameeventsdb");
+const wrappeddb = require("../../features/wrapped/data/wrappeddb");
 
 module.exports = {
   name: Events.ClientReady,
