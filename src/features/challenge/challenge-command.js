@@ -170,11 +170,12 @@ function _buildListChallengesEmbed(user, challenges) {
   }));
 
   // Split fields into chunks of 25 (Discord's field limit per embed)
+  const chunkSize = 25;
   const embeds = [];
-  for (let i = 0; i < fields.length; i += 25) {
-    const chunk = fields.slice(i, i + 25);
-    const pageNum = Math.floor(i / 25) + 1;
-    const totalPages = Math.ceil(fields.length / 25);
+  for (let i = 0; i < fields.length; i += chunkSize) {
+    const chunk = fields.slice(i, i + chunkSize);
+    const pageNum = Math.floor(i / chunkSize) + 1;
+    const totalPages = Math.ceil(fields.length / chunkSize);
 
     embeds.push(
       new EmbedBuilder()
@@ -182,119 +183,112 @@ function _buildListChallengesEmbed(user, challenges) {
           `${user.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ""}`,
         )
         .setColor(0xc100ff)
-        .setThumbnail(target.displayAvatarURL())
+        .setThumbnail(user.displayAvatarURL())
         .addFields(chunk),
     );
   }
+
+  return embeds;
 }
 
 async function removeChallenge(interaction) {
+  console.log(
+    `[ChallengeCommand][caller:${interaction.user.displayName}] is attempting to remove a challenge`,
+  );
   const targetUser = interaction.user;
-  const challenges = await challengedb.Challenges.findAll({
-    where: { userid: targetUser.id },
-  });
+  const challenges = await challengeService.listUserChallenges(targetUser.id);
   if (challenges.length == 0) {
     console.log(
-      `[Challenge][caller:${interaction.user.displayName}] No challenges to remove for user`,
+      `[ChallengeCommand][caller:${interaction.user.displayName}] no challenges to remove for user`,
     );
     await interaction.reply({
       content: "Could not find any challenges for you",
       ephemeral: true,
     });
-  } else {
-    const fields = challenges.map((c) => ({
-      name: c.name,
-      value: `**Description:** ${c.description}\n**Timeframe:** ${c.timeframe.charAt(0).toUpperCase() + c.timeframe.slice(1)}\n**Cheats Allowed:** ${c.cheats}\n**Pauses Allowed:** ${c.allowpause ? "Yes" : "No"}`,
-      inline: false,
-    }));
+    return;
+  }
 
-    // Split fields into chunks of 25 (Discord's field limit per embed)
-    const chunkSize = 25;
-    const embeds = [];
-    for (let i = 0; i < fields.length; i += chunkSize) {
-      const chunk = fields.slice(i, i + chunkSize);
-      const pageNum = Math.floor(i / chunkSize) + 1;
-      const totalPages = Math.ceil(fields.length / chunkSize);
+  const embeds = _buildListChallengesEmbed(targetUser, challenges);
+  const rows = _buildDeleteButtons(challenges);
+  const response = await interaction.reply({
+    embeds: embeds,
+    components: rows,
+    ephemeral: true,
+  });
 
-      embeds.push(
-        new EmbedBuilder()
-          .setTitle(
-            `${targetUser.displayName}'s Challenges${totalPages > 1 ? ` (Page ${pageNum}/${totalPages})` : ""}`,
-          )
-          .setColor(0xc100ff)
-          .setThumbnail(targetUser.displayAvatarURL())
-          .addFields(chunk),
-      );
-    }
-
-    // Create buttons for each challenge to remove
-    const buttons = challenges.map((c) =>
-      new ButtonBuilder()
-        .setCustomId(c.id.toString())
-        .setLabel(`Remove: ${c.name}`)
-        .setStyle(ButtonStyle.Danger),
+  var confirmation;
+  try {
+    const collectorFilter = (i) => i.user.id === interaction.user.id;
+    confirmation = await response.awaitMessageComponent({
+      filter: collectorFilter,
+      time: 60_000,
+    });
+  } catch {
+    console.log(
+      `[ChallengeCommand][caller:${interaction.user.displayName}] did not confirm challenge removal in time`,
     );
-
-    // Split buttons into rows (max 5 per row)
-    const rows = [];
-    for (let i = 0; i < buttons.length; i += 5) {
-      const chunk = buttons.slice(i, i + 5);
-      rows.push(new ActionRowBuilder().addComponents(chunk));
-    }
-
-    const response = await interaction.reply({
-      embeds: embeds,
-      components: rows,
+    await interaction.editReply({
+      content: "Confirmation not received within 1 minute, cancelling",
+      components: [],
       ephemeral: true,
     });
-
-    const collectorFilter = (i) => i.user.id === interaction.user.id;
-
-    try {
-      const confirmation = await response.awaitMessageComponent({
-        filter: collectorFilter,
-        time: 60_000,
-      });
-      const challenge = await challengedb.Challenges.findOne({
-        where: { id: parseInt(confirmation.customId) },
-      });
-      if (challenge) {
-        await challengedb.Challenges.destroy({
-          where: { id: parseInt(confirmation.customId) },
-        });
-        console.log(
-          `[Challenge][caller:${interaction.user.displayName}] Removed challenge '${challenge.name}'`,
-        );
-
-        const deleteEmbed = new EmbedBuilder()
-          .setTitle("Challenge Removed")
-          .setColor(0xc100ff)
-          .setThumbnail(targetUser.displayAvatarURL())
-          .setDescription(
-            `**${targetUser.displayName}** has removed their '${challenge.name}' challenge.`,
-          );
-
-        await confirmation.deferUpdate();
-        await response.delete();
-        await interaction.channel.send({ embeds: [deleteEmbed] });
-      } else {
-        console.log(
-          `[Challenge][caller:${interaction.user.displayName}] Tried to remove challenge '${confirmation.customId}' but challenge came back null`,
-        );
-        await confirmation.update({
-          content: "Failed to remove challenge, try again",
-          components: [],
-          ephemeral: true,
-        });
-      }
-    } catch {
-      await interaction.editReply({
-        content: "Confirmation not received within 1 minute, cancelling",
-        components: [],
-        ephemeral: true,
-      });
-    }
+    return;
   }
+
+  try {
+    const removedChallenge = await challengeService.removeChallenge(
+      parseInt(confirmation.customId),
+    );
+    const deleteEmbed = _buildChallengeRemovedEmbed(
+      interaction.user,
+      removedChallenge,
+    );
+
+    console.log(
+      `[ChallengeCommand][caller:${interaction.user.displayName}] removed challenge '${removedChallenge.name}'`,
+    );
+    await confirmation.deferUpdate();
+    await response.delete();
+    await interaction.channel.send({ embeds: [deleteEmbed] });
+  } catch (error) {
+    console.log(
+      `[ChallengeCommand][caller:${interaction.user.displayName}] tried to remove challenge '${confirmation.customId}' but failed`,
+    );
+    await confirmation.update({
+      content: "Failed to remove challenge, try again",
+      components: [],
+      ephemeral: true,
+    });
+  }
+}
+
+function _buildDeleteButtons(challenges) {
+  // Create buttons for each challenge to remove
+  const buttons = challenges.map((c) =>
+    new ButtonBuilder()
+      .setCustomId(c.id.toString())
+      .setLabel(`Remove: ${c.name}`)
+      .setStyle(ButtonStyle.Danger),
+  );
+
+  // Split buttons into rows (max 5 per row)
+  const rows = [];
+  for (let i = 0; i < buttons.length; i += 5) {
+    const chunk = buttons.slice(i, i + 5);
+    rows.push(new ActionRowBuilder().addComponents(chunk));
+  }
+
+  return rows;
+}
+
+function _buildChallengeRemovedEmbed(user, challenge) {
+  return new EmbedBuilder()
+    .setTitle("Challenge Removed")
+    .setColor(0xc100ff)
+    .setThumbnail(user.displayAvatarURL())
+    .setDescription(
+      `**${user.displayName}** has removed their '${challenge.name}' challenge.`,
+    );
 }
 
 module.exports = {
@@ -308,9 +302,9 @@ module.exports = {
     if (subCommand === "add") {
       await addChallenge(interaction);
     } else if (subCommand === "list-user") {
-      listUserChallenges(interaction);
+      await listUserChallenges(interaction);
     } else if (subCommand === "remove") {
-      removeChallenge(interaction);
+      await removeChallenge(interaction);
     } else {
       await interaction.reply("Invalid option");
     }

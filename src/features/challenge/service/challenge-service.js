@@ -43,5 +43,29 @@ const challengeService = {
     }
   },
 
-  async removeChallenge(challengeId) {},
+  async removeChallenge(challengeId) {
+    const challenge = await challengedb.Challenges.findOne({
+      where: { id: challengeId },
+    });
+
+    if (challenge) {
+      try {
+        await challengedb.Challenges.destroy({
+          where: { id: challengeId },
+        });
+        console.log(
+          `[ChallengeService] removed challenge '${challenge.name}' successfully`,
+        );
+      } catch (error) {
+        throw new Error("Failed to remove challenge, try again.");
+      }
+
+      return challenge;
+    } else {
+      console.log(
+        `[ChallengeService] tried to remove challenge '${challengeId}' but challenge came back null`,
+      );
+      throw new Error("Failed to remove challenge, try again.");
+    }
+  },
 };
