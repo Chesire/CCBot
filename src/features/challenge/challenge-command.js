@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
-const challengePresentation = require("../challenge/presentation/challenge-presentation");
-const challengeService = require("../challenge/service/challenge-service");
+const challengePresentation = require("./presentation/challenge-presentation");
+const challengeService = require("./service/challenge-service");
 
 const data = new SlashCommandBuilder()
   .setName("challenge")
