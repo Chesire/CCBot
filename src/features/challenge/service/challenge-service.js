@@ -49,6 +49,9 @@ const challengeService = {
           `[ChallengeService] removed challenge '${challenge.name}' successfully`,
         );
       } catch (error) {
+        console.log(
+          `[ChallengeService] failed to remove challenge '${challenge.name}', ${error}`,
+        );
         throw new Error("Failed to remove challenge, try again.");
       }
 
