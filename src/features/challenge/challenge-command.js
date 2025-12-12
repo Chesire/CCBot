@@ -128,7 +128,7 @@ async function removeChallenge(interaction) {
   console.log(`[ChallengeCommand] attempting to remove a challenge`);
   const targetUser = interaction.user;
   const challenges = await challengeService.listUserChallenges(targetUser.id);
-  if (challenges.length == 0) {
+  if (challenges.length === 0) {
     console.log(`[ChallengeCommand] no challenges to remove for user`);
     await interaction.reply({
       content: "Could not find any challenges for you",
