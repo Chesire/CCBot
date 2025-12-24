@@ -7,8 +7,8 @@ function isWrappedSeason() {
   const month = now.getMonth(); // 0 based
   const day = now.getDate();
 
-  // from boxing day -> end of Jan
-  return (month === 11 && day >= 26) || month === 0;
+  // from just before xmas -> end of Jan
+  return (month === 11 && day >= 23) || month === 0;
 }
 
 module.exports = { isWrappedSeason };
