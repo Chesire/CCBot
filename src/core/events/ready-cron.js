@@ -6,71 +6,50 @@ const challengedb = require("../../features/challenge/data/challengedb");
 
 async function fireDailyCron(client) {
   console.log("[ReadyCron] starting day cron");
-
-  const guild = await client.guilds.cache.get(token.guildId);
-  const challengeChannelId = await adminRepository.challengeChannelId.get();
-  const channel = await guild.channels.cache.get(challengeChannelId);
-  const challenges = await challengedb.Challenges.findAll({
-    where: { timeframe: "daily" },
-  });
-
-  console.log(`[ReadyCron] found ${challenges.length} challenges`);
+  const challenges = await _getChallenges("daily");
   if (challenges.length > 0) {
-    const challengesString = challenges
-      .map(
-        (c) =>
-          `<@${c.userid}>, did you complete your ${c.name} challenge yesterday?`,
-      )
-      .join("\n");
-
-    await channel.send(`${challengesString}`);
+    await _sendChallengeReminders(client, challenges, "yesterday");
   }
 }
 
 async function fireWeeklyCron(client) {
   console.log("[ReadyCron] starting week cron");
-
-  const guild = await client.guilds.cache.get(token.guildId);
-  const challengeChannelId = await adminRepository.challengeChannelId.get();
-  const channel = await guild.channels.cache.get(challengeChannelId);
-  const challenges = await challengedb.Challenges.findAll({
-    where: { timeframe: "weekly" },
-  });
-
-  console.log(`[ReadyCron] found ${challenges.length} challenges`);
+  const challenges = await _getChallenges("weekly");
   if (challenges.length > 0) {
-    const challengesString = challenges
-      .map(
-        (c) =>
-          `<@${c.userid}>, did you complete your ${c.name} challenge last week?`,
-      )
-      .join("\n");
-
-    await channel.send(`${challengesString}`);
+    await _sendChallengeReminders(client, challenges, "last week");
   }
 }
 
 async function fireMonthlyCron(client) {
   console.log("[ReadyCron] starting month cron");
+  const challenges = await _getChallenges("monthly");
+  if (challenges.length > 0) {
+    await _sendChallengeReminders(client, challenges, "last month");
+  }
+}
 
-  const guild = await client.guilds.cache.get(token.guildId);
-  const challengeChannelId = await adminRepository.challengeChannelId.get();
-  const channel = await guild.channels.cache.get(challengeChannelId);
+async function _getChallenges(timeFrame) {
   const challenges = await challengedb.Challenges.findAll({
-    where: { timeframe: "monthly" },
+    where: { timeframe: timeFrame },
   });
 
   console.log(`[ReadyCron] found ${challenges.length} challenges`);
-  if (challenges.length > 0) {
-    const challengesString = challenges
-      .map(
-        (c) =>
-          `<@${c.userid}>, did you complete your ${c.name} challenge last month?`,
-      )
-      .join("\n");
+  return challenges;
+}
 
-    await channel.send(`${challengesString}`);
-  }
+async function _sendChallengeReminders(client, challenges, timeString) {
+  const guild = await client.guilds.cache.get(token.guildId);
+  const challengeChannelId = await adminRepository.challengeChannelId.get();
+  const channel = await guild.channels.cache.get(challengeChannelId);
+
+  const challengesString = challenges
+    .map(
+      (c) =>
+        `<@${c.userid}>, did you complete your ${c.name} challenge ${timeString}?`,
+    )
+    .join("\n");
+
+  await channel.send(`${challengesString}`);
 }
 
 module.exports = {
