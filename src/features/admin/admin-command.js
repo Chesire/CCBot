@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ChannelType } = require("discord.js");
-const adminDb = require("./data/admindb");
+const adminRepository = require("./data/admin-repository");
 
 const data = new SlashCommandBuilder()
   .setName("admin")
@@ -41,17 +41,9 @@ const data = new SlashCommandBuilder()
 
 async function allowBotShameReplies(interaction) {
   const allowed = interaction.options.getBoolean("allow");
-  const rows = await adminDb.Admin.update(
-    { allowbotshamereplies: allowed },
-    { where: { singleid: 0 } },
-  );
-  if (rows == 0) {
-    buildDefaultDb();
-    await adminDb.Admin.update(
-      { allowbotshamereplies: allowed },
-      { where: { singleid: 0 } },
-    );
-  }
+  await adminRepository.allowBotShameReplies.set(allowed);
+  console.debug(`Allow bot shame replies set to ${allowed}`);
+
   if (allowed) {
     await interaction.reply("Bot can now post replies to shamed users");
   } else {
@@ -64,17 +56,7 @@ async function setChallengeChannel(interaction) {
   const savedId = channel.id.toString();
   console.debug(`Saving channel id ${savedId}`);
 
-  const rows = await adminDb.Admin.update(
-    { challengechannelid: savedId },
-    { where: { singleid: 0 } },
-  );
-  if (rows == 0) {
-    buildDefaultDb();
-    await adminDb.Admin.update(
-      { challengechannelid: savedId },
-      { where: { singleid: 0 } },
-    );
-  }
+  await adminRepository.challengeChannelId.set(savedId);
   await interaction.reply(
     `Challenge reminders will now be sent to <#${savedId}>`,
   );
@@ -85,26 +67,8 @@ async function setShamedOneRole(interaction) {
   const savedId = role.id.toString();
   console.debug(`Saving role id ${savedId}`);
 
-  const rows = await adminDb.Admin.update(
-    { shamedroleid: savedId },
-    { where: { singleid: 0 } },
-  );
-  if (rows == 0) {
-    buildDefaultDb();
-    await adminDb.Admin.update(
-      { shamedroleid: savedId },
-      { where: { singleid: 0 } },
-    );
-  }
+  await adminRepository.shamedRoleId.set(savedId);
   await interaction.reply(`Shamed one role has been set to <@&${savedId}>`);
-}
-
-async function buildDefaultDb() {
-  await adminDb.Admin.create({
-    singleid: 0,
-    challengechannelid: "0",
-    shamedroleid: "0",
-  });
 }
 
 module.exports = {
