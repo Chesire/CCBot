@@ -1,3 +1,4 @@
+const { Sequelize } = require("sequelize");
 const admindb = require("./admindb");
 
 const adminRepository = {
@@ -11,8 +12,18 @@ const adminRepository = {
 
   _createSetting(fieldName) {
     const attributes = admindb.Admin.getAttributes();
+    const fieldType = attributes[fieldName]?.type;
     const defaultValue = attributes[fieldName]?.defaultValue;
     const self = this;
+
+    const coerce = (value) => {
+      // For now only Boolean and String types are used
+      if (fieldType instanceof admindb.Sequelize.BOOLEAN) {
+        return Boolean(value);
+      }
+      return String(value);
+    };
+
     return {
       async get() {
         return self._record?.[fieldName] ?? defaultValue;
@@ -21,10 +32,10 @@ const adminRepository = {
         if (!self._record) {
           self._record = await admindb.Admin.findByPk(0);
         }
-        await self._record.update({ [fieldName]: value });
+        await self._record.update({ [fieldName]: coerce(value) });
       },
       isDefault(value) {
-        return value.toString() === defaultValue.toString();
+        return coerce(value).toString() === defaultValue.toString();
       },
     };
   },
