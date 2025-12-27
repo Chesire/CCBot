@@ -8,15 +8,24 @@ const adminRepository = {
     }
   },
 
-  async get(key) {
-    const adminRecord = await admindb.Admin.findByPk(0);
-    return adminRecord ? adminRecord[key] : null;
+  _createSetting(fieldName, defaultValue) {
+    const attributes = admindb.Admin.getAttributes();
+    const defaultValue = attributes[fieldName]?.defaultValue;
+    return {
+      async get() {
+        const record = await admindb.Admin.findByPk(0);
+        return record?.[fieldName] ?? defaultValue;
+      },
+      async set(value) {
+        const record = await admindb.Admin.findByPk(0);
+        await record.update({ [fieldName]: value });
+      },
+    };
   },
 
-  async set(key, value) {
-    const adminRecord = await admindb.Admin.findByPk(0);
-    await adminRecord.update({ [key]: value });
-  },
+  allowBotShameReplies: this._createSetting("allowbotshamereplies"),
+  challengeChannelId: this._createSetting("challengechannelid"),
+  shamedRoleId: this._createSetting("shamedroleid"),
 };
 
 module.exports = adminRepository;
