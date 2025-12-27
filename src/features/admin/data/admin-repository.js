@@ -9,7 +9,7 @@ const adminRepository = {
     }
   },
 
-  _createSetting(fieldName, defaultValue) {
+  _createSetting(fieldName) {
     const attributes = admindb.Admin.getAttributes();
     const defaultValue = attributes[fieldName]?.defaultValue;
     return {
