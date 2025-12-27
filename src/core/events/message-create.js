@@ -22,7 +22,10 @@ async function replyToPurple(message) {
 
   const shamedRoleId = await adminRepository.shamedRoleId.get();
   const allowBotShameReplies = await adminRepository.allowBotShameReplies.get();
-  if (shamedRoleId === "0" || !allowBotShameReplies) {
+  if (
+    adminRepository.shamedRoleId.isDefault(shamedRoleId) ||
+    !allowBotShameReplies
+  ) {
     return;
   }
 

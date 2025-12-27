@@ -45,7 +45,7 @@ const data = new SlashCommandBuilder()
 
 async function shame(interaction) {
   const shamedRoleId = await adminRepository.shamedRoleId.get();
-  if (shamedRoleId === "0") {
+  if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
     await interaction.reply("No role set");
     return;
   }
@@ -145,7 +145,7 @@ async function createEvent(guild, user) {
 
 async function unshame(interaction) {
   const shamedRoleId = await adminRepository.shamedRoleId.get();
-  if (shamedRoleId === "0") {
+  if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
     await interaction.reply("No role set");
     return;
   }

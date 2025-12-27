@@ -14,12 +14,15 @@ const adminRepository = {
     const defaultValue = attributes[fieldName]?.defaultValue;
     return {
       async get() {
-        const record = await admindb.Admin.findByPk(0);
+        const record = await admindb.Admin.findByPk(0); // should this be by guild id?
         return record?.[fieldName] ?? defaultValue;
       },
       async set(value) {
         const record = await admindb.Admin.findByPk(0);
         await record.update({ [fieldName]: value });
+      },
+      isDefault(value) {
+        return value === defaultValue;
       },
     };
   },
