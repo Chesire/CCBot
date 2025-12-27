@@ -4,7 +4,7 @@ const adminRepository = {
   async initialize() {
     const adminRecord = await admindb.Admin.findByPk(0);
     if (!adminRecord) {
-      await admindb.Admin.create({ singleId: 0 });
+      await admindb.Admin.create({ singleid: 0 });
     }
   },
 
