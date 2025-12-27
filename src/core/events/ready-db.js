@@ -9,21 +9,21 @@ module.exports = {
   name: Events.ClientReady,
   once: true,
   async execute(client) {
-    console.log(`${client.user.tag} ready. Syncing DBs!`);
+    console.log(`[ReadyDB] ${client.user.tag} ready. Syncing dbs!`);
 
-    console.log(`Syncing Admin DB`);
+    console.log(`[ReadyDB] syncing Admin db`);
     await admindb.Admin.sync({ alter: true });
     await adminRepository.initialize();
 
-    console.log(`Syncing Challenge DB`);
+    console.log(`[ReadyDB] syncing Challenge db`);
     await challengedb.Challenges.sync();
 
-    console.log(`Syncing ShameEvents DB`);
+    console.log(`[ReadyDB] syncing ShameEvents db`);
     await shameeventsdb.ShameEvents.sync();
 
-    console.log(`Syncing Wrapped DB`);
+    console.log(`[ReadyDB] syncing Wrapped db`);
     await wrappeddb.Wrapped.sync();
 
-    console.log("DBs Synced!");
+    console.log("[ReadyDB] dbs Synced!");
   },
 };

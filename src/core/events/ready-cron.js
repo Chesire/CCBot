@@ -56,7 +56,7 @@ module.exports = {
   name: Events.ClientReady,
   once: true,
   execute(client) {
-    console.log(`${client.user.tag} ready. Starting cron jobs!`);
+    console.log(`[ReadyCron] ${client.user.tag} ready. Starting cron jobs!`);
     const dailyMessage = new cron.CronJob("00 00 07 * * *", () => {
       // This runs every day at 7:00:00
       fireDailyCron(client);
@@ -73,6 +73,6 @@ module.exports = {
     dailyMessage.start();
     weeklyMessage.start();
     monthlyMessage.start();
-    console.log("Cron jobs scheduled");
+    console.log("[ReadyCron] cron jobs scheduled");
   },
 };
