@@ -29,11 +29,6 @@ const data = new SlashCommandBuilder()
   )
   .addSubcommand((subCommand) =>
     subCommand
-      .setName("show-challenge-channel")
-      .setDescription("Shows which channel gets challenge reminders"),
-  )
-  .addSubcommand((subCommand) =>
-    subCommand
       .setName("set-shamed-role")
       .setDescription("Set the role to use for the shamed one")
       .addRoleOption((option) =>
@@ -42,11 +37,6 @@ const data = new SlashCommandBuilder()
           .setDescription("The role to use to notify for shamed one reminders")
           .setRequired(true),
       ),
-  )
-  .addSubcommand((subCommand) =>
-    subCommand
-      .setName("show-shamed-role")
-      .setDescription("Shows which role is for the shamed"),
   );
 
 async function allowBotShameReplies(interaction) {
@@ -90,17 +80,6 @@ async function setChallengeChannel(interaction) {
   );
 }
 
-async function showChallengeChannel(interaction) {
-  const db = await adminDb.Admin.findOne({ where: { singleid: 0 } });
-  if (db) {
-    await interaction.reply(
-      `The channel for challenge reminders is <#${db.challengechannelid}>`,
-    );
-  } else {
-    await interaction.reply("No channel has been set");
-  }
-}
-
 async function setShamedOneRole(interaction) {
   const role = interaction.options.getRole("role");
   const savedId = role.id.toString();
@@ -118,15 +97,6 @@ async function setShamedOneRole(interaction) {
     );
   }
   await interaction.reply(`Shamed one role has been set to <@&${savedId}>`);
-}
-
-async function showShamedOneRole(interaction) {
-  const db = await adminDb.Admin.findOne({ where: { singleid: 0 } });
-  if (db) {
-    await interaction.reply(`The role for the shamed <@&${db.shamedroleid}>`);
-  } else {
-    await interaction.reply("No role has been set");
-  }
 }
 
 async function buildDefaultDb() {
@@ -148,10 +118,6 @@ module.exports = {
       setChallengeChannel(interaction);
     } else if (subCommand === "set-shamed-role") {
       setShamedOneRole(interaction);
-    } else if (subCommand === "show-challenge-channel") {
-      showChallengeChannel(interaction);
-    } else if (subCommand === "show-shamed-role") {
-      showShamedOneRole(interaction);
     } else {
       await interaction.reply("Unknown command");
     }
