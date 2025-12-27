@@ -2,27 +2,29 @@ const admindb = require("./admindb");
 
 const adminRepository = {
   async initialize() {
-    const adminRecord = await admindb.Admin.findByPk(0);
-    if (!adminRecord) {
+    this._record = await admindb.Admin.findByPk(0);
+    if (!this._record) {
       console.log("[AdminRepository] no admin record found, creating default");
-      await admindb.Admin.create({ singleid: 0 });
+      this._record = await admindb.Admin.create({ singleid: 0 });
     }
   },
 
   _createSetting(fieldName) {
     const attributes = admindb.Admin.getAttributes();
     const defaultValue = attributes[fieldName]?.defaultValue;
+    const self = this;
     return {
       async get() {
-        const record = await admindb.Admin.findByPk(0); // should this be by guild id?
-        return record?.[fieldName] ?? defaultValue;
+        return self._record?.[fieldName] ?? defaultValue;
       },
       async set(value) {
-        const record = await admindb.Admin.findByPk(0);
-        await record.update({ [fieldName]: value });
+        if (!self._record) {
+          self._record = await admindb.Admin.findByPk(0);
+        }
+        await self._record.update({ [fieldName]: value });
       },
       isDefault(value) {
-        return value === defaultValue;
+        return value.toString() === defaultValue.toString();
       },
     };
   },
