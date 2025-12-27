@@ -40,7 +40,7 @@ const data = new SlashCommandBuilder()
   );
 
 async function allowBotShameReplies(interaction) {
-  console.log(`[AdminCommand] attempting change shame bot reply setting`);
+  console.log(`[AdminCommand] attempting to change shame bot reply setting`);
   const allowed = interaction.options.getBoolean("allow");
   await adminRepository.allowBotShameReplies.set(allowed);
   console.log(`[AdminCommand] allow bot shame replies set to ${allowed}`);
@@ -53,7 +53,7 @@ async function allowBotShameReplies(interaction) {
 }
 
 async function setChallengeChannel(interaction) {
-  console.log(`[AdminCommand] attempting change challenge channel setting`);
+  console.log(`[AdminCommand] attempting to change challenge channel setting`);
   const channel = interaction.options.getChannel("channel");
   const savedId = channel.id.toString();
   await adminRepository.challengeChannelId.set(savedId);
@@ -65,7 +65,7 @@ async function setChallengeChannel(interaction) {
 }
 
 async function setShamedOneRole(interaction) {
-  console.log(`[AdminCommand] attempting change shamed role setting`);
+  console.log(`[AdminCommand] attempting to change shamed role setting`);
   const role = interaction.options.getRole("role");
   const savedId = role.id.toString();
   await adminRepository.shamedRoleId.set(savedId);
