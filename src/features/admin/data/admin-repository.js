@@ -4,6 +4,7 @@ const adminRepository = {
   async initialize() {
     const adminRecord = await admindb.Admin.findByPk(0);
     if (!adminRecord) {
+      console.log("[AdminRepository] no admin record found, creating default");
       await admindb.Admin.create({ singleid: 0 });
     }
   },

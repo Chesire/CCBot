@@ -40,9 +40,10 @@ const data = new SlashCommandBuilder()
   );
 
 async function allowBotShameReplies(interaction) {
+  console.log(`[AdminCommand] attempting change shame bot reply setting`);
   const allowed = interaction.options.getBoolean("allow");
   await adminRepository.allowBotShameReplies.set(allowed);
-  console.debug(`Allow bot shame replies set to ${allowed}`);
+  console.log(`[AdminCommand] allow bot shame replies set to ${allowed}`);
 
   if (allowed) {
     await interaction.reply("Bot can now post replies to shamed users");
@@ -52,22 +53,24 @@ async function allowBotShameReplies(interaction) {
 }
 
 async function setChallengeChannel(interaction) {
+  console.log(`[AdminCommand] attempting change challenge channel setting`);
   const channel = interaction.options.getChannel("channel");
   const savedId = channel.id.toString();
-  console.debug(`Saving channel id ${savedId}`);
-
   await adminRepository.challengeChannelId.set(savedId);
+  console.log(`[AdminCommand] challenge channel id set to ${savedId}`);
+
   await interaction.reply(
     `Challenge reminders will now be sent to <#${savedId}>`,
   );
 }
 
 async function setShamedOneRole(interaction) {
+  console.log(`[AdminCommand] attempting change shamed role setting`);
   const role = interaction.options.getRole("role");
   const savedId = role.id.toString();
-  console.debug(`Saving role id ${savedId}`);
-
   await adminRepository.shamedRoleId.set(savedId);
+  console.log(`[AdminCommand] shamed role id set to ${savedId}`);
+
   await interaction.reply(`Shamed one role has been set to <@&${savedId}>`);
 }
 
@@ -75,15 +78,18 @@ module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
+    console.log(
+      `[AdminCommand][caller:${interaction.user.displayName}] used admin subcommand '${interaction.options.getSubcommand()}'`,
+    );
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === "allow-bot-shame-replies") {
-      allowBotShameReplies(interaction);
+      await allowBotShameReplies(interaction);
     } else if (subCommand === "set-challenge-channel") {
-      setChallengeChannel(interaction);
+      await setChallengeChannel(interaction);
     } else if (subCommand === "set-shamed-role") {
-      setShamedOneRole(interaction);
+      await setShamedOneRole(interaction);
     } else {
-      await interaction.reply("Unknown command");
+      await interaction.reply("Invalid option");
     }
   },
 };
