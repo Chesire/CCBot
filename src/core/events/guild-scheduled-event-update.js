@@ -1,6 +1,6 @@
 const { Events } = require("discord.js");
 const { GuildScheduledEventStatus } = require("discord-api-types/v10");
-const adminDb = require("../../features/admin/data/admindb");
+const adminRepository = require("../../features/admin/data/admin-repository");
 const shameEventsDb = require("../../features/shame/data/shameeventsdb");
 
 function getStatusName(status) {
@@ -17,27 +17,24 @@ async function removeShameRecord(shameRecord, newEvent) {
   try {
     const guild = newEvent.guild;
     const member = await guild.members.fetch(shameRecord.userid);
-    const db = await adminDb.Admin.findOne({ where: { singleid: 0 } });
+    const shamedRole = await adminRepository.shamedRoleId.get();
+    const challengeChannelId = await adminRepository.challengeChannelId.get();
+    const challengeChannel = await guild.channels.fetch(challengeChannelId);
 
-    if (db && db.shamedroleid) {
-      await member.roles.remove(db.shamedroleid);
-      console.log(`Removed shame role from ${shameRecord.userid}`);
+    await member.roles.remove(shamedRole);
+    console.log(`[EventUpdate] removed shame role from ${shameRecord.userid}`);
 
-      if (db.challengechannelid) {
-        const channel = await guild.channels.fetch(db.challengechannelid);
-        if (channel) {
-          await channel.send(
-            `<@${shameRecord.userid}>, your shame period has ended. You are free!`,
-          );
-        }
-      }
+    if (challengeChannel) {
+      await challengeChannel.send(
+        `<@${shameRecord.userid}>, your shame period has ended. You are free!`,
+      );
     }
 
     await shameEventsDb.ShameEvents.destroy({
       where: { eventid: newEvent.id },
     });
   } catch (error) {
-    console.error(`Error removing shame role: ${error}`);
+    console.error(`[EventUpdate] error removing shame role: ${error}`);
   }
 }
 
@@ -47,19 +44,24 @@ module.exports = {
     const oldStatus = getStatusName(oldEvent?.status);
     const newStatus = getStatusName(newEvent.status);
     console.log(
-      `GuildScheduledEventUpdate detected, {old status - ${oldStatus}, newStatus - ${newStatus}}`,
+      `[EventUpdate] update detected, {old status - ${oldStatus}, newStatus - ${newStatus}}`,
     );
+
     if (
       oldEvent?.status !== GuildScheduledEventStatus.Completed &&
       newEvent.status === GuildScheduledEventStatus.Completed
     ) {
-      console.log("Event is completed state, finding shamed user");
+      console.log(
+        "[EventUpdate] event is completed state, finding shamed user",
+      );
       const shameRecord = await shameEventsDb.ShameEvents.findOne({
         where: { eventid: newEvent.id },
       });
 
       if (shameRecord) {
-        console.log("Shame record found, attempting to remove role");
+        console.log(
+          "[EventUpdate] shame record found, attempting to remove role",
+        );
         await removeShameRecord(shameRecord, newEvent);
       }
     }
