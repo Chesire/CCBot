@@ -10,9 +10,7 @@ Discord bot to aid with challenges
 |---|---|
 | `allow-bot-shame-replies` | Sets if the bot can reply with snarky gifs to shamed users. |
 | `set-challenge-channel` | Sets the channel to use for challenge reminders/notifications. |
-| `show-challenge-channel` | Shows which channel is setup for challenge reminders/notifications. |
 | `set-shamed-role` | Sets the server role for being shamed. |
-| `show-shamed-role` | Shows the server role for the shamed. |
 
 ### Challenge
 

@@ -3,11 +3,19 @@ const {
   GuildScheduledEventEntityType,
   GuildScheduledEventPrivacyLevel,
 } = require("discord.js");
-const adminDb = require("../admin/data/admindb");
+const adminRepository = require("../admin/data/admin-repository");
 const shameEventsDb = require("./data/shameeventsdb");
 const wrappedDb = require("../wrapped/data/wrappeddb");
 
 const weekExtra = 7 * 24 * 60 * 60 * 1000;
+
+const shameGifs = [
+  "https://tenor.com/VU1y.gif",
+  "https://tenor.com/xV7I.gif",
+  "https://tenor.com/bSiK8.gif",
+  "https://tenor.com/bLQnA.gif",
+  "https://tenor.com/uDmFdQcabLN.gif",
+];
 
 const data = new SlashCommandBuilder()
   .setName("shame")
@@ -36,14 +44,14 @@ const data = new SlashCommandBuilder()
   );
 
 async function shame(interaction) {
-  const db = await adminDb.Admin.findOne({ where: { singleid: 0 } });
-  if (!db || !db.shamedroleid) {
+  const shamedRoleId = await adminRepository.shamedRoleId.get();
+  if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
     await interaction.reply("No role set");
     return;
   }
   const user = interaction.options.getUser("user");
   const guild = interaction.guild;
-  const role = await guild.roles.fetch(db.shamedroleid);
+  const role = await guild.roles.fetch(shamedRoleId);
   const member = await guild.members.fetch(user.id);
 
   await member.roles.add(role);
@@ -53,7 +61,7 @@ async function shame(interaction) {
   });
   const missedChallenges = wrapped.missedchallenges + 1;
   const shamedCount = member.roles.cache.some(
-    (roleCache) => roleCache.id === db.shamedroleid,
+    (roleCache) => roleCache.id === shamedRoleId,
   )
     ? wrapped.shamedcount
     : wrapped.shamedcount + 1;
@@ -64,13 +72,6 @@ async function shame(interaction) {
   await wrapped.save();
   await handleEvent(guild, user);
 
-  const shameGifs = [
-    "https://tenor.com/VU1y.gif",
-    "https://tenor.com/xV7I.gif",
-    "https://tenor.com/bSiK8.gif",
-    "https://tenor.com/bLQnA.gif",
-    "https://tenor.com/uDmFdQcabLN.gif",
-  ];
   const selectedGif = shameGifs[Math.floor(Math.random() * shameGifs.length)];
 
   await interaction.reply(`SHAME <@${user.id}> SHAME\n${selectedGif}`);
@@ -143,14 +144,14 @@ async function createEvent(guild, user) {
 }
 
 async function unshame(interaction) {
-  const db = await adminDb.Admin.findOne({ where: { singleid: 0 } });
-  if (!db || !db.shamedroleid) {
+  const shamedRoleId = await adminRepository.shamedRoleId.get();
+  if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
     await interaction.reply("No role set");
     return;
   }
   const user = interaction.options.getUser("user");
   const guild = interaction.guild;
-  const role = await guild.roles.fetch(db.shamedroleid);
+  const role = await guild.roles.fetch(shamedRoleId);
   const member = await guild.members.fetch(user.id);
   await member.roles.remove(role);
 

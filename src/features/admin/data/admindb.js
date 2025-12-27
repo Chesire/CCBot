@@ -13,6 +13,7 @@ const Admin = sequelize.define("admin", {
   singleid: {
     type: Sequelize.NUMBER,
     defaultValue: 0,
+    primaryKey: true,
   },
   challengechannelid: {
     type: Sequelize.TEXT,

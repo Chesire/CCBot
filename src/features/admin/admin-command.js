@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ChannelType } = require("discord.js");
-const adminDb = require("./data/admindb");
+const adminRepository = require("./data/admin-repository");
 
 const data = new SlashCommandBuilder()
   .setName("admin")
@@ -29,11 +29,6 @@ const data = new SlashCommandBuilder()
   )
   .addSubcommand((subCommand) =>
     subCommand
-      .setName("show-challenge-channel")
-      .setDescription("Shows which channel gets challenge reminders"),
-  )
-  .addSubcommand((subCommand) =>
-    subCommand
       .setName("set-shamed-role")
       .setDescription("Set the role to use for the shamed one")
       .addRoleOption((option) =>
@@ -42,26 +37,14 @@ const data = new SlashCommandBuilder()
           .setDescription("The role to use to notify for shamed one reminders")
           .setRequired(true),
       ),
-  )
-  .addSubcommand((subCommand) =>
-    subCommand
-      .setName("show-shamed-role")
-      .setDescription("Shows which role is for the shamed"),
   );
 
 async function allowBotShameReplies(interaction) {
+  console.log(`[AdminCommand] attempting to change shame bot reply setting`);
   const allowed = interaction.options.getBoolean("allow");
-  const rows = await adminDb.Admin.update(
-    { allowbotshamereplies: allowed },
-    { where: { singleid: 0 } },
-  );
-  if (rows == 0) {
-    buildDefaultDb();
-    await adminDb.Admin.update(
-      { allowbotshamereplies: allowed },
-      { where: { singleid: 0 } },
-    );
-  }
+  await adminRepository.allowBotShameReplies.set(allowed);
+  console.log(`[AdminCommand] allow bot shame replies set to ${allowed}`);
+
   if (allowed) {
     await interaction.reply("Bot can now post replies to shamed users");
   } else {
@@ -70,90 +53,43 @@ async function allowBotShameReplies(interaction) {
 }
 
 async function setChallengeChannel(interaction) {
+  console.log(`[AdminCommand] attempting to change challenge channel setting`);
   const channel = interaction.options.getChannel("channel");
   const savedId = channel.id.toString();
-  console.debug(`Saving channel id ${savedId}`);
+  await adminRepository.challengeChannelId.set(savedId);
+  console.log(`[AdminCommand] challenge channel id set to ${savedId}`);
 
-  const rows = await adminDb.Admin.update(
-    { challengechannelid: savedId },
-    { where: { singleid: 0 } },
-  );
-  if (rows == 0) {
-    buildDefaultDb();
-    await adminDb.Admin.update(
-      { challengechannelid: savedId },
-      { where: { singleid: 0 } },
-    );
-  }
   await interaction.reply(
     `Challenge reminders will now be sent to <#${savedId}>`,
   );
 }
 
-async function showChallengeChannel(interaction) {
-  const db = await adminDb.Admin.findOne({ where: { singleid: 0 } });
-  if (db) {
-    await interaction.reply(
-      `The channel for challenge reminders is <#${db.challengechannelid}>`,
-    );
-  } else {
-    await interaction.reply("No channel has been set");
-  }
-}
-
 async function setShamedOneRole(interaction) {
+  console.log(`[AdminCommand] attempting to change shamed role setting`);
   const role = interaction.options.getRole("role");
   const savedId = role.id.toString();
-  console.debug(`Saving role id ${savedId}`);
+  await adminRepository.shamedRoleId.set(savedId);
+  console.log(`[AdminCommand] shamed role id set to ${savedId}`);
 
-  const rows = await adminDb.Admin.update(
-    { shamedroleid: savedId },
-    { where: { singleid: 0 } },
-  );
-  if (rows == 0) {
-    buildDefaultDb();
-    await adminDb.Admin.update(
-      { shamedroleid: savedId },
-      { where: { singleid: 0 } },
-    );
-  }
   await interaction.reply(`Shamed one role has been set to <@&${savedId}>`);
-}
-
-async function showShamedOneRole(interaction) {
-  const db = await adminDb.Admin.findOne({ where: { singleid: 0 } });
-  if (db) {
-    await interaction.reply(`The role for the shamed <@&${db.shamedroleid}>`);
-  } else {
-    await interaction.reply("No role has been set");
-  }
-}
-
-async function buildDefaultDb() {
-  await adminDb.Admin.create({
-    singleid: 0,
-    challengechannelid: "0",
-    shamedroleid: "0",
-  });
 }
 
 module.exports = {
   cooldown: 5,
   data: data,
   async execute(interaction) {
+    console.log(
+      `[AdminCommand][caller:${interaction.user.displayName}] used admin subcommand '${interaction.options.getSubcommand()}'`,
+    );
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === "allow-bot-shame-replies") {
-      allowBotShameReplies(interaction);
+      await allowBotShameReplies(interaction);
     } else if (subCommand === "set-challenge-channel") {
-      setChallengeChannel(interaction);
+      await setChallengeChannel(interaction);
     } else if (subCommand === "set-shamed-role") {
-      setShamedOneRole(interaction);
-    } else if (subCommand === "show-challenge-channel") {
-      showChallengeChannel(interaction);
-    } else if (subCommand === "show-shamed-role") {
-      showShamedOneRole(interaction);
+      await setShamedOneRole(interaction);
     } else {
-      await interaction.reply("Unknown command");
+      await interaction.reply("Invalid option");
     }
   },
 };
