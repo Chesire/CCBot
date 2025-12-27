@@ -28,16 +28,4 @@ const Admin = sequelize.define("admin", {
   },
 });
 
-async function initializeAdminDb() {
-  const adminRecord = await Admin.findByPk(0);
-  if (!adminRecord) {
-    await Admin.create({
-      singleid: 0,
-      challengechannelid: "0",
-      shamedroleid: "0",
-      allowbotshamereplies: true,
-    });
-  }
-}
-
-module.exports = { Admin, initializeAdminDb };
+module.exports = { Admin };
