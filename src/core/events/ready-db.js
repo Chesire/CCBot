@@ -12,17 +12,17 @@ module.exports = {
     console.log(`${client.user.tag} ready. Syncing DBs!`);
 
     console.log(`Syncing Admin DB`);
-    admindb.Admin.sync({ alter: true });
+    await admindb.Admin.sync({ alter: true });
     await adminRepository.initialize();
 
     console.log(`Syncing Challenge DB`);
-    challengedb.Challenges.sync();
+    await challengedb.Challenges.sync();
 
     console.log(`Syncing ShameEvents DB`);
-    shameeventsdb.ShameEvents.sync();
+    await shameeventsdb.ShameEvents.sync();
 
     console.log(`Syncing Wrapped DB`);
-    wrappeddb.Wrapped.sync();
+    await wrappeddb.Wrapped.sync();
 
     console.log("DBs Synced!");
   },
