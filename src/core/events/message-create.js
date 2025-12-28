@@ -59,14 +59,14 @@ async function trackMessage(message) {
 async function trackUserMessageCreated(message) {
   await eventService.incrementUserEventCount(
     message.author.id,
-    USER_EVENT_TYPES.MESSAGE_CREATED,
+    USER_EVENT_TYPES.USER_MESSAGE_COUNT,
   );
 }
 
 async function trackChannelMessageCreated(message) {
   await eventService.incrementChannelEventCount(
     message.channel.id,
-    CHANNEL_EVENT_TYPES.MESSAGES_IN_CHANNEL,
+    CHANNEL_EVENT_TYPES.CHANNEL_MESSAGE_COUNT,
   );
 }
 
@@ -75,7 +75,7 @@ async function trackLostMessage(message) {
   if (messageContent === "i lost" || messageContent === "lost") {
     await eventService.incrementUserEventCount(
       message.author.id,
-      USER_EVENT_TYPES.TIMES_LOST,
+      USER_EVENT_TYPES.USER_TIMES_LOST,
     );
   }
 }

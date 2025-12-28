@@ -1,14 +1,14 @@
 const { UserYearEvent, ChannelYearEvent } = require("../data/eventdb");
 
 const USER_EVENT_TYPES = {
-  MESSAGE_CREATED: "message_created",
-  TIMES_SHAMED: "times_shamed",
-  MISSED_CHALLENGES: "missed_challenges",
-  TIMES_LOST: "times_lost",
+  USER_MESSAGE_COUNT: "user_message_count",
+  USER_SHAMED_COUNT: "user_shamed_count",
+  USER_MISSED_CHALLENGES: "user_missed_challenges",
+  USER_TIMES_LOST: "user_times_lost",
 };
 
 const CHANNEL_EVENT_TYPES = {
-  MESSAGES_IN_CHANNEL: "messages_in_channel",
+  CHANNEL_MESSAGE_COUNT: "channel_message_count",
 };
 
 const eventService = {
