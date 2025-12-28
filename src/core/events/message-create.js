@@ -49,14 +49,18 @@ async function trackMessage(message) {
     return;
   }
 
-  await trackMessageCreated();
+  await trackMessageCreated(message);
   await trackLostMessage(message);
 }
 
-async function trackMessageCreated() {
+async function trackMessageCreated(message) {
   await eventService.incrementUserEventCount(
     message.author.id,
     USER_EVENT_TYPES.MESSAGE_CREATED,
+  );
+  await eventService.incrementChannelEventCount(
+    message.channel.id,
+    CHANNEL_EVENT_TYPES.MESSAGES_IN_CHANNEL,
   );
 }
 
