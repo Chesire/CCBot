@@ -14,9 +14,8 @@ const CHANNEL_EVENT_TYPES = {
 const eventService = {
   async incrementUserEventCount(userId, eventType, amount = 1) {
     if (!Object.values(USER_EVENT_TYPES).includes(eventType)) {
-      throw new Error(
-        `Invalid eventType: "${eventType}". Must be one of: ${Object.values(USER_EVENT_TYPES).join(", ")}`,
-      );
+      console.error(`[EventService] Invalid event type: ${eventType}`);
+      return;
     }
 
     const year = new Date().getFullYear();
@@ -31,9 +30,8 @@ const eventService = {
 
   async incrementChannelEventCount(channelId, eventType, amount = 1) {
     if (!Object.values(CHANNEL_EVENT_TYPES).includes(eventType)) {
-      throw new Error(
-        `Invalid eventType: "${eventType}". Must be one of: ${Object.values(CHANNEL_EVENT_TYPES).join(", ")}`,
-      );
+      console.error(`[EventService] Invalid event type: ${eventType}`);
+      return;
     }
 
     const year = new Date().getFullYear();
