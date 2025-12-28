@@ -1,7 +1,24 @@
 const { UserYearEvent, ChannelYearEvent } = require("../data/eventdb");
 
+const USER_EVENT_TYPES = {
+  MESSAGE_CREATED: "message_created",
+  TIMES_SHAMED: "times_shamed",
+  MISSED_CHALLENGES: "missed_challenges",
+  TIMES_LOST: "times_lost",
+};
+
+const CHANNEL_EVENT_TYPES = {
+  MESSAGES_IN_CHANNEL: "messages_in_channel",
+};
+
 const eventService = {
   async incrementUserEventCount(userId, eventType, amount = 1) {
+    if (!Object.values(USER_EVENT_TYPES).includes(eventType)) {
+      throw new Error(
+        `Invalid eventType: "${eventType}". Must be one of: ${Object.values(USER_EVENT_TYPES).join(", ")}`,
+      );
+    }
+
     const year = new Date().getFullYear();
     const [record] = await UserYearEvent.findOrCreate({
       where: { userid: userId, year: year, eventtype: eventType },
@@ -13,6 +30,12 @@ const eventService = {
   },
 
   async incrementChannelEventCount(channelId, eventType, amount = 1) {
+    if (!Object.values(CHANNEL_EVENT_TYPES).includes(eventType)) {
+      throw new Error(
+        `Invalid eventType: "${eventType}". Must be one of: ${Object.values(CHANNEL_EVENT_TYPES).join(", ")}`,
+      );
+    }
+
     const year = new Date().getFullYear();
     const [record] = await ChannelYearEvent.findOrCreate({
       where: { channelid: channelId, year: year, eventtype: eventType },
@@ -24,4 +47,4 @@ const eventService = {
   },
 };
 
-module.exports = eventService;
+module.exports = { eventService, USER_EVENT_TYPES, CHANNEL_EVENT_TYPES };
