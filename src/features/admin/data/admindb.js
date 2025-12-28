@@ -9,7 +9,7 @@ const sequelize = new Sequelize({
 
 const Admin = sequelize.define("admin", {
   singleid: {
-    type: Sequelize.NUMBER,
+    type: Sequelize.INTEGER,
     defaultValue: 0,
     primaryKey: true,
   },

@@ -14,7 +14,7 @@ const Challenges = sequelize.define("challenges", {
   username: Sequelize.TEXT,
   userid: Sequelize.TEXT,
   cheats: {
-    type: Sequelize.NUMBER,
+    type: Sequelize.INTEGER,
     defaultValue: 0,
   },
   allowpause: {
