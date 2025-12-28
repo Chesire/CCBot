@@ -1,17 +1,15 @@
 const { Sequelize } = require("sequelize");
 const path = require("path");
 
-const sequelize = new Sequelize("admindb", "user", "password", {
-  host: "localhost",
+const sequelize = new Sequelize({
   dialect: "sqlite",
   logging: false,
-  // SQLite only
   storage: path.join(__dirname, "../../../../data/admindb.sqlite"),
 });
 
 const Admin = sequelize.define("admin", {
   singleid: {
-    type: Sequelize.NUMBER,
+    type: Sequelize.INTEGER,
     defaultValue: 0,
     primaryKey: true,
   },
