@@ -23,11 +23,9 @@ const path = require("path");
  *
  * Note: This tracks WHEN users were shamed (via scheduled events), not WHAT types of shame events occurred
  */
-const sequelize = new Sequelize("shameeventsdb", "user", "password", {
-  host: "localhost",
+const sequelize = new Sequelize({
   dialect: "sqlite",
   logging: false,
-  // SQLite only
   storage: path.join(__dirname, "../../../../data/shameeventsdb.sqlite"),
 });
 
