@@ -49,15 +49,21 @@ async function trackMessage(message) {
     return;
   }
 
-  await trackMessageCreated(message);
-  await trackLostMessage(message);
+  await Promise.all([
+    trackUserMessageCreated(message),
+    trackChannelMessageCreated(message),
+    trackLostMessage(message),
+  ]);
 }
 
-async function trackMessageCreated(message) {
+async function trackUserMessageCreated(message) {
   await eventService.incrementUserEventCount(
     message.author.id,
     USER_EVENT_TYPES.MESSAGE_CREATED,
   );
+}
+
+async function trackChannelMessageCreated(message) {
   await eventService.incrementChannelEventCount(
     message.channel.id,
     CHANNEL_EVENT_TYPES.MESSAGES_IN_CHANNEL,
@@ -78,6 +84,6 @@ module.exports = {
   name: Events.MessageCreate,
   async execute(message) {
     replyToPurple(message);
-    trackMessage(message);
+    await trackMessage(message);
   },
 };
