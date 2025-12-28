@@ -1,92 +1,62 @@
 const { Events } = require("discord.js");
 const cron = require("cron");
 const token = require("../../../config.json");
-const admindb = require("../../features/admin/data/admindb");
+const adminRepository = require("../../features/admin/data/admin-repository");
 const challengedb = require("../../features/challenge/data/challengedb");
 
 async function fireDailyCron(client) {
-  console.log("Starting day cron");
-  const db = await admindb.Admin.findOne({ where: { singleid: 0 } });
-  if (!db) {
-    return;
-  }
-
-  const guild = await client.guilds.cache.get(token.guildId);
-  const channel = await guild.channels.cache.get(db.challengechannelid);
-  const challenges = await challengedb.Challenges.findAll({
-    where: { timeframe: "daily" },
-  });
-
-  console.log(`Found ${challenges.length} challenges`);
+  console.log("[ReadyCron] starting day cron");
+  const challenges = await _getChallenges("daily");
   if (challenges.length > 0) {
-    const challengesString = challenges
-      .map(
-        (c) =>
-          `<@${c.userid}>, did you complete your ${c.name} challenge yesterday?`,
-      )
-      .join("\n");
-
-    await channel.send(`${challengesString}`);
+    await _sendChallengeReminders(client, challenges, "yesterday");
   }
 }
 
 async function fireWeeklyCron(client) {
-  console.log("Starting week cron");
-  const db = await admindb.Admin.findOne({ where: { singleid: 0 } });
-  if (!db) {
-    return;
-  }
-
-  const guild = await client.guilds.cache.get(token.guildId);
-  const channel = await guild.channels.cache.get(db.challengechannelid);
-  const challenges = await challengedb.Challenges.findAll({
-    where: { timeframe: "weekly" },
-  });
-
-  console.log(`Found ${challenges.length} challenges`);
+  console.log("[ReadyCron] starting week cron");
+  const challenges = await _getChallenges("weekly");
   if (challenges.length > 0) {
-    const challengesString = challenges
-      .map(
-        (c) =>
-          `<@${c.userid}>, did you complete your ${c.name} challenge last week?`,
-      )
-      .join("\n");
-
-    await channel.send(`${challengesString}`);
+    await _sendChallengeReminders(client, challenges, "last week");
   }
 }
 
 async function fireMonthlyCron(client) {
-  console.log("Starting month cron");
-  const db = await admindb.Admin.findOne({ where: { singleid: 0 } });
-  if (!db) {
-    return;
+  console.log("[ReadyCron] starting month cron");
+  const challenges = await _getChallenges("monthly");
+  if (challenges.length > 0) {
+    await _sendChallengeReminders(client, challenges, "last month");
   }
+}
 
-  const guild = await client.guilds.cache.get(token.guildId);
-  const channel = await guild.channels.cache.get(db.challengechannelid);
+async function _getChallenges(timeFrame) {
   const challenges = await challengedb.Challenges.findAll({
-    where: { timeframe: "monthly" },
+    where: { timeframe: timeFrame },
   });
 
-  console.log(`Found ${challenges.length} challenges`);
-  if (challenges.length > 0) {
-    const challengesString = challenges
-      .map(
-        (c) =>
-          `<@${c.userid}>, did you complete your ${c.name} challenge last month?`,
-      )
-      .join("\n");
+  console.log(`[ReadyCron] found ${challenges.length} challenges`);
+  return challenges;
+}
 
-    await channel.send(`${challengesString}`);
-  }
+async function _sendChallengeReminders(client, challenges, timeString) {
+  const guild = await client.guilds.cache.get(token.guildId);
+  const challengeChannelId = await adminRepository.challengeChannelId.get();
+  const channel = await guild.channels.cache.get(challengeChannelId);
+
+  const challengesString = challenges
+    .map(
+      (c) =>
+        `<@${c.userid}>, did you complete your ${c.name} challenge ${timeString}?`,
+    )
+    .join("\n");
+
+  await channel.send(`${challengesString}`);
 }
 
 module.exports = {
   name: Events.ClientReady,
   once: true,
   execute(client) {
-    console.log(`${client.user.tag} ready. Starting cron jobs!`);
+    console.log(`[ReadyCron] ${client.user.tag} ready. Starting cron jobs!`);
     const dailyMessage = new cron.CronJob("00 00 07 * * *", () => {
       // This runs every day at 7:00:00
       fireDailyCron(client);
@@ -103,6 +73,6 @@ module.exports = {
     dailyMessage.start();
     weeklyMessage.start();
     monthlyMessage.start();
-    console.log("Cron jobs scheduled");
+    console.log("[ReadyCron] cron jobs scheduled");
   },
 };
