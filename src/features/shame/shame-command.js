@@ -5,7 +5,10 @@ const {
 } = require("discord.js");
 const adminRepository = require("../admin/data/admin-repository");
 const shameEventsDb = require("./data/shameeventsdb");
-const { eventService, USER_EVENT_TYPES } = require("../services/event-service");
+const {
+  eventService,
+  USER_EVENT_TYPES,
+} = require("../../core/services/event-service");
 
 const weekExtra = 7 * 24 * 60 * 60 * 1000;
 
