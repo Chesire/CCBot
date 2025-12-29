@@ -49,11 +49,9 @@ async function trackMessage(message) {
     return;
   }
 
-  await Promise.all([
-    trackUserMessageCreated(message),
-    trackChannelMessageCreated(message),
-    trackLostMessage(message),
-  ]);
+  await trackUserMessageCreated(message);
+  await trackChannelMessageCreated(message);
+  await trackLostMessage(message);
 }
 
 async function trackUserMessageCreated(message) {
@@ -83,7 +81,7 @@ async function trackLostMessage(message) {
 module.exports = {
   name: Events.MessageCreate,
   async execute(message) {
-    replyToPurple(message);
+    await replyToPurple(message);
     await trackMessage(message);
   },
 };

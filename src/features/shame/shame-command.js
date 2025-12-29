@@ -64,10 +64,8 @@ async function shame(interaction) {
 
   await member.roles.add(role);
 
-  await Promise.all([
-    trackUserMissedChallenge(user.id),
-    trackUserShamed(isNewlyShamed, user.id),
-  ]);
+  await trackUserMissedChallenge(user.id);
+  await trackUserShamed(isNewlyShamed, user.id);
 
   await handleEvent(guild, user);
 
@@ -109,7 +107,7 @@ async function handleEvent(guild, user) {
       console.log(
         `Exception occurred updating: ${exception}\nRemoving the current stored value and creating new`,
       );
-      shameEventsDb.ShameEvents.destroy({ where: { userid: user.id } });
+      await shameEventsDb.ShameEvents.destroy({ where: { userid: user.id } });
     }
   }
   // if no previous event, create a new one.
