@@ -20,6 +20,15 @@ const UserYearEvent = sequelize.define(
       defaultValue: 0,
     },
   },
+  {
+    indexes: [
+      {
+        fields: ["userid", "year", "eventtype"],
+        unique: true,
+        name: "idx_user_year_event",
+      },
+    ],
+  },
 );
 
 const ChannelYearEvent = sequelize.define(
@@ -32,6 +41,15 @@ const ChannelYearEvent = sequelize.define(
       type: Sequelize.INTEGER,
       defaultValue: 0,
     },
+  },
+  {
+    indexes: [
+      {
+        fields: ["channelid", "year", "eventtype"],
+        unique: true,
+        name: "idx_channel_year_event",
+      },
+    ],
   },
 );
 
