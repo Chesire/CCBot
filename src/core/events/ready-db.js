@@ -16,10 +16,10 @@ module.exports = {
     await adminRepository.initialize();
 
     console.log(`[ReadyDB] syncing Challenge db`);
-    await challengedb.Challenges.sync();
+    await challengedb.Challenges.sync({ alter: true });
 
     console.log(`[ReadyDB] syncing ShameEvents db`);
-    await shameeventsdb.ShameEvents.sync();
+    await shameeventsdb.ShameEvents.sync({ alter: true });
 
     console.log(`[ReadyDB] syncing Event db`);
     await eventdb.UserYearEvent.sync({ alter: true });
