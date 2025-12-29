@@ -11,9 +11,12 @@ const CHANNEL_EVENT_TYPES = {
   CHANNEL_MESSAGE_COUNT: "channel_message_count",
 };
 
+const VALID_USER_EVENT_TYPES = new Set(Object.values(USER_EVENT_TYPES));
+const VALID_CHANNEL_EVENT_TYPES = new Set(Object.values(CHANNEL_EVENT_TYPES));
+
 const eventService = {
   async incrementUserEventCount(userId, eventType, amount = 1) {
-    if (!Object.values(USER_EVENT_TYPES).includes(eventType)) {
+    if (!VALID_USER_EVENT_TYPES.has(eventType)) {
       console.error(`[EventService] Invalid event type: ${eventType}`);
       return;
     }
@@ -29,7 +32,7 @@ const eventService = {
   },
 
   async incrementChannelEventCount(channelId, eventType, amount = 1) {
-    if (!Object.values(CHANNEL_EVENT_TYPES).includes(eventType)) {
+    if (!VALID_CHANNEL_EVENT_TYPES.has(eventType)) {
       console.error(`[EventService] Invalid event type: ${eventType}`);
       return;
     }
