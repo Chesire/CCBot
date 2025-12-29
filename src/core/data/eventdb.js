@@ -4,7 +4,7 @@ const path = require("path");
 const sequelize = new Sequelize({
   dialect: "sqlite",
   logging: false,
-  storage: path.join(__dirname, "../../../../data/eventdb.sqlite"),
+  storage: path.join(__dirname, "../../../data/eventdb.sqlite"),
   pool: { max: 1, min: 0, idle: 20000, acquire: 20000 },
   retry: { max: 3 },
 });
