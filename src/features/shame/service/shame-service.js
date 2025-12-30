@@ -41,7 +41,6 @@ const shameService = {
    * Returns true if the user was successfully unshamed, false if otherwise
    */
   async unshameUser(user, guild) {
-    // Consider if we should remove the event if it currently exists to make sure its tidied up
     console.log(`[ShameService] attempting to unshame user ${user.id}`);
 
     const shameRoleId = await adminRepository.shamedRoleId.get();
@@ -53,6 +52,8 @@ const shameService = {
     const role = await guild.roles.fetch(shameRoleId);
     const member = await guild.members.fetch(user.id);
     await member.roles.remove(role);
+
+    await this._removeShameEvent(user, guild);
 
     console.log(`[ShameService] ${user.id} successfully unshamed`);
     return true;
@@ -140,6 +141,22 @@ const shameService = {
       reason: "",
     });
     await shameEventsRepository.create(user.id, newEvent.id);
+  },
+
+  async _removeShameEvent(user, guild) {
+    console.log("[ShameService] removing previous shame event if it exists");
+
+    try {
+      const previous = await shameEventsRepository.findByUserId(user.id);
+      if (previous) {
+        await guild.scheduledEvents.delete(previous.eventid);
+        await shameEventsRepository.destroy(previous.id);
+      }
+    } catch (exception) {
+      console.log(
+        `[ShameService] exception occurred removing shame event: ${exception}`,
+      );
+    }
   },
 };
 
