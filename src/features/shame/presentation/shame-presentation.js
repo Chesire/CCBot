@@ -20,3 +20,5 @@ const shamePresentation = {
     return "No shamed role has been set.";
   },
 };
+
+module.exports = shamePresentation;
