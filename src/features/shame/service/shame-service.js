@@ -140,7 +140,7 @@ const shameService = {
       }
     } catch (exception) {
       console.log(
-        `[ShameService] exception occurred updating event: ${exception}.
+        `[ShameService] exception occurred updating event: ${exception}
         'Removing the current stored value and creating new`,
       );
       await this._removeShameEvent(user, guild);
