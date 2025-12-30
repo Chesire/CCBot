@@ -1,4 +1,4 @@
-const adminRepository = require("../../../admin/data/admin-repository");
+const adminRepository = require("../../admin/data/admin-repository");
 const shameEventsRepository = require("../data/shame-events-repository");
 const {
   eventService,
