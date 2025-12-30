@@ -81,8 +81,8 @@ async function trackUserMissedChallenge(userId) {
   );
 }
 
-async function trackUserShamed(newShamedRole, userId) {
-  if (newShamedRole) {
+async function trackUserShamed(isNewlyShamed, userId) {
+  if (isNewlyShamed) {
     await eventService.incrementUserEventCount(
       userId,
       USER_EVENT_TYPES.USER_SHAMED_COUNT,
