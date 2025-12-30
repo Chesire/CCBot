@@ -41,115 +41,13 @@ const data = new SlashCommandBuilder()
   );
 
 async function shame(interaction) {
-  // TODO: Move this into a service
-  const shamedRoleId = await adminRepository.shamedRoleId.get();
-  if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
-    await interaction.reply(shamePresentation.getNoRoleError());
-    return;
-  }
-
   const user = interaction.options.getUser("user");
-  const guild = interaction.guild;
-  const role = await guild.roles.fetch(shamedRoleId);
-  const member = await guild.members.fetch(user.id);
 
-  const isNewlyShamed = !member.roles.cache.some(
-    (roleCache) => roleCache.id === shamedRoleId,
-  );
-
-  // TODO: Move this into a service
-  await member.roles.add(role);
-
-  // TODO: Move this into a service
-  await trackUserMissedChallenge(user.id);
-  await trackUserShamed(isNewlyShamed, user.id);
-
-  // TODO: Move this into a service
-  await handleEvent(guild, user);
-
-  await interaction.reply(shamePresentation.getShameMessage(user.id));
-}
-
-async function trackUserMissedChallenge(userId) {
-  await eventService.incrementUserEventCount(
-    userId,
-    USER_EVENT_TYPES.USER_MISSED_CHALLENGES,
-  );
-}
-
-async function trackUserShamed(isNewlyShamed, userId) {
-  if (isNewlyShamed) {
-    await eventService.incrementUserEventCount(
-      userId,
-      USER_EVENT_TYPES.USER_SHAMED_COUNT,
-    );
+  if (shameService.shameUser(user.id, interaction.guild)) {
+    await interaction.reply(shamePresentation.getShameMessage(user.id));
+  } else {
+    await interaction.reply(shamePresentation.getNoRoleError());
   }
-}
-
-async function handleEvent(guild, user) {
-  const previousEventTable = await shameEventsDb.ShameEvents.findOne({
-    where: { userid: user.id },
-  });
-  if (previousEventTable) {
-    try {
-      const previousEvent = await guild.scheduledEvents.fetch({
-        guildScheduledEvent: previousEventTable.eventid,
-      });
-      if (previousEvent) {
-        await updateEvent(previousEvent);
-        return;
-      }
-    } catch (exception) {
-      console.log(
-        `Exception occurred updating: ${exception}\nRemoving the current stored value and creating new`,
-      );
-      await shameEventsDb.ShameEvents.destroy({ where: { userid: user.id } });
-    }
-  }
-  // if no previous event, create a new one.
-  await createEvent(guild, user);
-}
-
-async function updateEvent(event) {
-  console.log(`Found previous event to update - ${event}`);
-
-  const previousStart = new Date(event.scheduledStartAt);
-  const newStartDate = new Date(previousStart.getTime() + weekExtra);
-  const previousEnd = new Date(event.scheduledEndAt);
-  const newEndDate = new Date(previousEnd.getTime() + weekExtra + 1000);
-
-  console.log(
-    `previousStart - ${previousStart}\nnewStartDate - ${newStartDate}\npreviousEnd ${previousEnd}\nnewEndDate - ${newEndDate}`,
-  );
-
-  await event.edit({
-    scheduledStartTime: newStartDate,
-    scheduledEndTime: newEndDate,
-  });
-}
-
-async function createEvent(guild, user) {
-  console.log("No previous event, creating new one");
-  const startDate = new Date(Date.now() + weekExtra);
-  const endDate = new Date(Date.now() + weekExtra + 1000);
-
-  const newEvent = await guild.scheduledEvents.create({
-    name: `${user.displayName}s period of shame ends`,
-    scheduledStartTime: startDate,
-    scheduledEndTime: endDate,
-    privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
-    description: `Event for when the shame of ${user.displayName} has come to an end.`,
-    entityType: GuildScheduledEventEntityType.External,
-    entityMetadata: {
-      location: "",
-    },
-    reason: "",
-  });
-
-  await shameEventsDb.ShameEvents.create({
-    userid: user.id,
-    eventid: newEvent.id,
-  });
 }
 
 async function unshame(interaction) {
