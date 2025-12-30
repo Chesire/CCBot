@@ -12,7 +12,7 @@ const shamePresentation = {
     return `SHAME <@${user.id}> SHAME\n${gif}`;
   },
 
-  getUnshamedMessaged(userId) {
+  getUnshamedMessage(userId) {
     return `<@${userId}>, you are free`;
   },
 };

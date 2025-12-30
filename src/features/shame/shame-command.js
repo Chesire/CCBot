@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 const adminRepository = require("../admin/data/admin-repository");
 const shameEventsDb = require("./data/shameeventsdb");
+const shameService = require("./service/shame-service");
 const {
   eventService,
   USER_EVENT_TYPES,
@@ -152,19 +153,13 @@ async function createEvent(guild, user) {
 }
 
 async function unshame(interaction) {
-  // TODO: Move this into a service
-  const shamedRoleId = await adminRepository.shamedRoleId.get();
-  if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
-    await interaction.reply("No role set");
-    return;
-  }
   const user = interaction.options.getUser("user");
-  const guild = interaction.guild;
-  const role = await guild.roles.fetch(shamedRoleId);
-  const member = await guild.members.fetch(user.id);
-  await member.roles.remove(role);
 
-  await interaction.reply(shamePresentation.getUnshamedMessaged(user.id));
+  if (await shameService.unshameUser(user.id, interaction.guild)) {
+    await interaction.reply(shamePresentation.getUnshamedMessage(user.id));
+  } else {
+    await interaction.reply("No role set");
+  }
 }
 
 module.exports = {
@@ -173,9 +168,9 @@ module.exports = {
   async execute(interaction) {
     const subCommand = interaction.options.getSubcommand();
     if (subCommand === "add") {
-      shame(interaction);
+      await shame(interaction);
     } else if (subCommand === "remove") {
-      unshame(interaction);
+      await unshame(interaction);
     } else {
       await interaction.reply("Unknown command");
     }
