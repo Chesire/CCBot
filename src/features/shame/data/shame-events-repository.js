@@ -14,6 +14,12 @@ const shameEventsRepository = {
     });
   },
 
+  async findByEventId(eventId) {
+    return await shameeventsdb.ShameEvents.findOne({
+      where: { eventid: eventId },
+    });
+  },
+
   async destroy(id) {
     return await shameeventsdb.ShameEvents.destroy({
       where: { id: id },
