@@ -9,7 +9,7 @@ const {
   GuildScheduledEventEntityType,
 } = require("discord.js");
 
-const weekExtra = 7 * 24 * 60 * 60 * 1000;
+const _weekExtra = 7 * 24 * 60 * 60 * 1000;
 
 const shameService = {
   /**
@@ -99,8 +99,8 @@ const shameService = {
 
         const previousStart = new Date(previousEvent.scheduledStartAt);
         const previousEnd = new Date(previousEvent.scheduledEndAt);
-        const newStartDate = new Date(previousStart.getTime() + weekExtra);
-        const newEndDate = new Date(previousEnd.getTime() + weekExtra + 1000);
+        const newStartDate = new Date(previousStart.getTime() + _weekExtra);
+        const newEndDate = new Date(previousEnd.getTime() + _weekExtra + 1000);
 
         console.log(
           `[ShameService] previousStart - ${previousStart}
@@ -125,8 +125,8 @@ const shameService = {
   async _createShameEvent(user, guild) {
     console.log("[ShameService] no previous event, creating new one");
 
-    const startDate = new Date(Date.now() + weekExtra);
-    const endDate = new Date(Date.now() + weekExtra + 1000);
+    const startDate = new Date(Date.now() + _weekExtra);
+    const endDate = new Date(Date.now() + _weekExtra + 1000);
     const newEvent = await guild.scheduledEvents.create({
       name: `${user.displayName}s period of shame ends`,
       scheduledStartTime: startDate,
