@@ -29,7 +29,7 @@ const shameService = {
     await member.roles.add(role);
 
     await this._trackUserMissedChallenge(user);
-    await this._trackUserShamed(user, member.roles);
+    await this._trackUserShamed(user, member.roles, shameRoleId);
 
     await this._handleShameEvent(user, guild);
 
@@ -65,9 +65,9 @@ const shameService = {
     );
   },
 
-  async _trackUserShamed(user, memberRoles) {
+  async _trackUserShamed(user, memberRoles, shameRoleId) {
     const isNewlyShamed = !memberRoles.cache.some(
-      (roleCache) => roleCache.id === shamedRoleId,
+      (roleCache) => roleCache.id === shameRoleId,
     );
 
     if (isNewlyShamed) {
