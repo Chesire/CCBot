@@ -17,7 +17,7 @@ function getStatusName(status) {
 async function removeShameEvent(shameEvent, newEvent) {
   try {
     const guild = newEvent.guild;
-    const member = await guild.members.fetch(shameRecord.userid);
+    const member = await guild.members.fetch(shameEvent.userid);
     const shamedRole = await adminRepository.shamedRoleId.get();
     const challengeChannelId = await adminRepository.challengeChannelId.get();
     const challengeChannel = await guild.channels.fetch(challengeChannelId);
@@ -51,7 +51,7 @@ module.exports = {
       newEvent.status === GuildScheduledEventStatus.Completed
     ) {
       console.log(
-        "[EventUpdate] event is now completed state, finding shame event record",
+        "[EventUpdate] event has now completed, finding shame event record",
       );
       const shameEvent = await shameEventsRepository.findByEventId(newEvent.id);
 
