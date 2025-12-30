@@ -26,10 +26,11 @@ const shameService = {
 
     const role = await guild.roles.fetch(shameRoleId);
     const member = await guild.members.fetch(user.id);
-    await member.roles.add(role);
 
     await this._trackUserMissedChallenge(user);
     await this._trackUserShamed(user, member.roles, shameRoleId);
+
+    await member.roles.add(role);
 
     await this._handleShameEvent(user, guild);
 
@@ -83,14 +84,34 @@ const shameService = {
     const previousEventTable = await shameEventsRepository.findByUserId(
       user.id,
     );
-    if (previousEventTable) {
-      await this._updateShameEvent(guild, previousEventTable);
-    } else {
+    if (!previousEventTable) {
       await this._createShameEvent(user, guild);
+    } else {
+      await this._updateShameEvent(user, guild, previousEventTable);
     }
   },
 
-  async _updateShameEvent(guild, previousEventTable) {
+  async _createShameEvent(user, guild) {
+    console.log("[ShameService] no previous event, creating new one");
+
+    const startDate = new Date(Date.now() + _weekExtra);
+    const endDate = new Date(Date.now() + _weekExtra + 1000);
+    const newEvent = await guild.scheduledEvents.create({
+      name: `${user.displayName}s period of shame ends`,
+      scheduledStartTime: startDate,
+      scheduledEndTime: endDate,
+      privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
+      description: `Event for when the shame of ${user.displayName} has come to an end.`,
+      entityType: GuildScheduledEventEntityType.External,
+      entityMetadata: {
+        location: "",
+      },
+      reason: "",
+    });
+    await shameEventsRepository.create(user.id, newEvent.id);
+  },
+
+  async _updateShameEvent(user, guild, previousEventTable) {
     try {
       const previousEvent = await guild.scheduledEvents.fetch({
         guildScheduledEvent: previousEventTable.eventid,
@@ -114,33 +135,17 @@ const shameService = {
           scheduledStartTime: newStartDate,
           scheduledEndTime: newEndDate,
         });
+      } else {
+        throw new Error("Previous event not found");
       }
     } catch (exception) {
       console.log(
-        `[ShameService] exception occurred updating: ${exception}\nRemoving the current stored value and creating new`,
+        `[ShameService] exception occurred updating event: ${exception}.
+        'Removing the current stored value and creating new`,
       );
-      await shameEventsRepository.destroy(previousEventTable.id);
+      await this._removeShameEvent(user, guild);
+      await this._createShameEvent(user, guild);
     }
-  },
-
-  async _createShameEvent(user, guild) {
-    console.log("[ShameService] no previous event, creating new one");
-
-    const startDate = new Date(Date.now() + _weekExtra);
-    const endDate = new Date(Date.now() + _weekExtra + 1000);
-    const newEvent = await guild.scheduledEvents.create({
-      name: `${user.displayName}s period of shame ends`,
-      scheduledStartTime: startDate,
-      scheduledEndTime: endDate,
-      privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
-      description: `Event for when the shame of ${user.displayName} has come to an end.`,
-      entityType: GuildScheduledEventEntityType.External,
-      entityMetadata: {
-        location: "",
-      },
-      reason: "",
-    });
-    await shameEventsRepository.create(user.id, newEvent.id);
   },
 
   async _removeShameEvent(user, guild) {
