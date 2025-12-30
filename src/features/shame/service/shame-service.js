@@ -1,12 +1,22 @@
 const adminRepository = require("../../../admin/data/admin-repository");
-const shameEventsRepository = require("../shame/data/shame-events-repository");
+const shameEventsRepository = require("../data/shame-events-repository");
+const {
+  eventService,
+  USER_EVENT_TYPES,
+} = require("../../../core/services/event-service");
+const {
+  GuildScheduledEventPrivacyLevel,
+  GuildScheduledEventEntityType,
+} = require("discord.js");
+
+const weekExtra = 7 * 24 * 60 * 60 * 1000;
 
 const shameService = {
   /**
    * Returns true if the user was successfully shamed, false if otherwise
    */
-  async shameUser(userId, guild) {
-    console.log(`[ShameService] attempting to shame user ${userId}`);
+  async shameUser(user, guild) {
+    console.log(`[ShameService] attempting to shame user ${user.id}`);
 
     const shameRoleId = await adminRepository.shamedRoleId.get();
     if (adminRepository.shamedRoleId.isDefault(shameRoleId)) {
@@ -15,24 +25,24 @@ const shameService = {
     }
 
     const role = await guild.roles.fetch(shameRoleId);
-    const member = await guild.members.fetch(userId);
+    const member = await guild.members.fetch(user.id);
     await member.roles.add(role);
 
-    await this._trackUserMissedChallenge(userId);
-    await this._trackUserShamed(member, userId);
+    await this._trackUserMissedChallenge(user);
+    await this._trackUserShamed(user, member.roles);
 
-    await this._handleShameEvent(userId, guild);
+    await this._handleShameEvent(user, guild);
 
-    console.log(`[ShameService] ${userId} successfully shamed`);
+    console.log(`[ShameService] ${user.id} successfully shamed`);
     return true;
   },
 
   /**
    * Returns true if the user was successfully unshamed, false if otherwise
    */
-  async unshameUser(userId, guild) {
+  async unshameUser(user, guild) {
     // Consider if we should remove the event if it currently exists to make sure its tidied up
-    console.log(`[ShameService] attempting to unshame user ${userId}`);
+    console.log(`[ShameService] attempting to unshame user ${user.id}`);
 
     const shameRoleId = await adminRepository.shamedRoleId.get();
     if (adminRepository.shamedRoleId.isDefault(shameRoleId)) {
@@ -41,39 +51,41 @@ const shameService = {
     }
 
     const role = await guild.roles.fetch(shameRoleId);
-    const member = await guild.members.fetch(userId);
+    const member = await guild.members.fetch(user.id);
     await member.roles.remove(role);
 
-    console.log(`[ShameService] ${userId} successfully unshamed`);
+    console.log(`[ShameService] ${user.id} successfully unshamed`);
     return true;
   },
 
-  async _trackUserMissedChallenge(userId) {
+  async _trackUserMissedChallenge(user) {
     await eventService.incrementUserEventCount(
-      userId,
+      user.id,
       USER_EVENT_TYPES.USER_MISSED_CHALLENGES,
     );
   },
 
-  async _trackUserShamed(member, userId) {
-    const isNewlyShamed = !member.roles.cache.some(
+  async _trackUserShamed(user, memberRoles) {
+    const isNewlyShamed = !memberRoles.cache.some(
       (roleCache) => roleCache.id === shamedRoleId,
     );
 
     if (isNewlyShamed) {
       await eventService.incrementUserEventCount(
-        userId,
+        user.id,
         USER_EVENT_TYPES.USER_SHAMED_COUNT,
       );
     }
   },
 
-  async _handleShameEvent(userId, guild) {
-    const previousEventTable = await shameEventsRepository.findByUserId(userId);
+  async _handleShameEvent(user, guild) {
+    const previousEventTable = await shameEventsRepository.findByUserId(
+      user.id,
+    );
     if (previousEventTable) {
-      this._updateShameEvent(guild, previousEventTable);
+      await this._updateShameEvent(guild, previousEventTable);
     } else {
-      this._createShameEvent(userId, guild);
+      await this._createShameEvent(user, guild);
     }
   },
 
@@ -110,7 +122,7 @@ const shameService = {
     }
   },
 
-  async _createShameEvent(userId, guild) {
+  async _createShameEvent(user, guild) {
     console.log("[ShameService] no previous event, creating new one");
 
     const startDate = new Date(Date.now() + weekExtra);
@@ -127,6 +139,8 @@ const shameService = {
       },
       reason: "",
     });
-    await shameEventsRepository.create(userId, newEvent.id);
+    await shameEventsRepository.create(user.id, newEvent.id);
   },
 };
+
+module.exports = shameService;

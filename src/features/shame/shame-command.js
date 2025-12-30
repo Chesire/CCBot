@@ -1,18 +1,6 @@
-const {
-  SlashCommandBuilder,
-  GuildScheduledEventEntityType,
-  GuildScheduledEventPrivacyLevel,
-} = require("discord.js");
-const adminRepository = require("../admin/data/admin-repository");
-const shameEventsDb = require("./data/shameeventsdb");
+const { SlashCommandBuilder } = require("discord.js");
 const shameService = require("./service/shame-service");
-const {
-  eventService,
-  USER_EVENT_TYPES,
-} = require("../../core/services/event-service");
 const shamePresentation = require("../shame/presentation/shame-presentation.js");
-
-const weekExtra = 7 * 24 * 60 * 60 * 1000;
 
 const data = new SlashCommandBuilder()
   .setName("shame")
@@ -43,7 +31,7 @@ const data = new SlashCommandBuilder()
 async function shame(interaction) {
   const user = interaction.options.getUser("user");
 
-  if (shameService.shameUser(user.id, interaction.guild)) {
+  if (await shameService.shameUser(user, interaction.guild)) {
     await interaction.reply(shamePresentation.getShameMessage(user.id));
   } else {
     await interaction.reply(shamePresentation.getNoRoleError());
@@ -53,7 +41,7 @@ async function shame(interaction) {
 async function unshame(interaction) {
   const user = interaction.options.getUser("user");
 
-  if (await shameService.unshameUser(user.id, interaction.guild)) {
+  if (await shameService.unshameUser(user, interaction.guild)) {
     await interaction.reply(shamePresentation.getUnshamedMessage(user.id));
   } else {
     await interaction.reply(shamePresentation.getNoRoleError());
