@@ -103,9 +103,9 @@ const shameService = {
         const newEndDate = new Date(previousEnd.getTime() + weekExtra + 1000);
 
         console.log(
-          `[ShameService] previousStart - ${previousStart}\n
-          newStartDate - ${newStartDate}\n
-          previousEnd ${previousEnd}\n
+          `[ShameService] previousStart - ${previousStart}
+          newStartDate - ${newStartDate}
+          previousEnd ${previousEnd}
           newEndDate - ${newEndDate}`,
         );
 
