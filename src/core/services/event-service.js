@@ -26,8 +26,7 @@ const eventService = {
       where: { userid: userId, year: year, eventtype: eventType },
       defaults: { count: 0 },
     });
-    record.count += amount;
-    await record.save();
+    await record.increment("count", { by: amount });
     return record;
   },
 
@@ -42,8 +41,7 @@ const eventService = {
       where: { channelid: channelId, year: year, eventtype: eventType },
       defaults: { count: 0 },
     });
-    record.count += amount;
-    await record.save();
+    await record.increment("count", { by: amount });
     return record;
   },
 };
