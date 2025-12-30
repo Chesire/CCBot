@@ -1,6 +1,10 @@
 const { Events } = require("discord.js");
 const adminRepository = require("../../features/admin/data/admin-repository");
-const wrappedDb = require("../../features/wrapped/data/wrappeddb");
+const {
+  eventService,
+  USER_EVENT_TYPES,
+  CHANNEL_EVENT_TYPES,
+} = require("../services/event-service");
 
 const purpleGifs = [
   "https://tenor.com/vic7L020lDK.gif",
@@ -45,27 +49,39 @@ async function trackMessage(message) {
     return;
   }
 
-  const [db, created] = await wrappedDb.Wrapped.findOrCreate({
-    where: { userid: message.author.id },
-  });
+  await trackUserMessageCreated(message);
+  await trackChannelMessageCreated(message);
+  await trackLostMessage(message);
+}
 
+async function trackUserMessageCreated(message) {
+  await eventService.incrementUserEventCount(
+    message.author.id,
+    USER_EVENT_TYPES.USER_MESSAGE_COUNT,
+  );
+}
+
+async function trackChannelMessageCreated(message) {
+  await eventService.incrementChannelEventCount(
+    message.channel.id,
+    CHANNEL_EVENT_TYPES.CHANNEL_MESSAGE_COUNT,
+  );
+}
+
+async function trackLostMessage(message) {
   const messageContent = message.content.toLowerCase();
-  const newMessageCount = db.messagecount + 1;
-  const isGameText = messageContent === "i lost" || messageContent === "lost";
-  const newTimesLost = isGameText ? db.timeslost + 1 : db.timeslost;
-
-  db.set({
-    messagecount: newMessageCount,
-    timeslost: newTimesLost,
-  });
-
-  await db.save();
+  if (messageContent === "i lost" || messageContent === "lost") {
+    await eventService.incrementUserEventCount(
+      message.author.id,
+      USER_EVENT_TYPES.USER_TIMES_LOST,
+    );
+  }
 }
 
 module.exports = {
   name: Events.MessageCreate,
   async execute(message) {
-    replyToPurple(message);
-    trackMessage(message);
+    await replyToPurple(message);
+    await trackMessage(message);
   },
 };

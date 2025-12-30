@@ -5,7 +5,10 @@ const {
 } = require("discord.js");
 const adminRepository = require("../admin/data/admin-repository");
 const shameEventsDb = require("./data/shameeventsdb");
-const wrappedDb = require("../wrapped/data/wrappeddb");
+const {
+  eventService,
+  USER_EVENT_TYPES,
+} = require("../../core/services/event-service");
 
 const weekExtra = 7 * 24 * 60 * 60 * 1000;
 
@@ -49,32 +52,42 @@ async function shame(interaction) {
     await interaction.reply("No role set");
     return;
   }
+
   const user = interaction.options.getUser("user");
   const guild = interaction.guild;
   const role = await guild.roles.fetch(shamedRoleId);
   const member = await guild.members.fetch(user.id);
 
+  const isNewlyShamed = !member.roles.cache.some(
+    (roleCache) => roleCache.id === shamedRoleId,
+  );
+
   await member.roles.add(role);
 
-  const [wrapped, created] = await wrappedDb.Wrapped.findOrCreate({
-    where: { userid: user.id },
-  });
-  const missedChallenges = wrapped.missedchallenges + 1;
-  const shamedCount = member.roles.cache.some(
-    (roleCache) => roleCache.id === shamedRoleId,
-  )
-    ? wrapped.shamedcount
-    : wrapped.shamedcount + 1;
-  wrapped.set({
-    missedchallenges: missedChallenges,
-    shamedcount: shamedCount,
-  });
-  await wrapped.save();
+  await trackUserMissedChallenge(user.id);
+  await trackUserShamed(isNewlyShamed, user.id);
+
   await handleEvent(guild, user);
 
   const selectedGif = shameGifs[Math.floor(Math.random() * shameGifs.length)];
 
   await interaction.reply(`SHAME <@${user.id}> SHAME\n${selectedGif}`);
+}
+
+async function trackUserMissedChallenge(userId) {
+  await eventService.incrementUserEventCount(
+    userId,
+    USER_EVENT_TYPES.USER_MISSED_CHALLENGES,
+  );
+}
+
+async function trackUserShamed(isNewlyShamed, userId) {
+  if (isNewlyShamed) {
+    await eventService.incrementUserEventCount(
+      userId,
+      USER_EVENT_TYPES.USER_SHAMED_COUNT,
+    );
+  }
 }
 
 async function handleEvent(guild, user) {
@@ -94,7 +107,7 @@ async function handleEvent(guild, user) {
       console.log(
         `Exception occurred updating: ${exception}\nRemoving the current stored value and creating new`,
       );
-      shameEventsDb.ShameEvents.destroy({ where: { userid: user.id } });
+      await shameEventsDb.ShameEvents.destroy({ where: { userid: user.id } });
     }
   }
   // if no previous event, create a new one.

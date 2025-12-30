@@ -3,22 +3,20 @@ const {
   isWrappedSeason,
 } = require("../../core/utils/wrapped-season-validator");
 const UserFetcher = require("../../core/utils/user-fetcher");
-const wrappedDb = require("./data/wrappeddb");
 
 const data = new SlashCommandBuilder()
   .setName("wrapped")
-  .setDescription("Commands to interact with the yearly wrapped")
-  .addSubcommand((subCommand) =>
-    subCommand
-      .setName("show")
-      .setDescription("Prints out the wrapped info for everybody"),
-  );
+  .setDescription("Show the yearly wrapped");
 
 async function show(interaction) {
+  // TODO: Fix this to use the new DB correctly
   if (!isWrappedSeason()) {
+    return await interaction.reply("Its not yet time for wrapped");
+  } else {
     return await interaction.reply("Its not yet time for wrapped");
   }
 
+  /*
   await interaction.deferReply();
 
   try {
@@ -105,6 +103,7 @@ async function show(interaction) {
       "Error fetching wrapped data. Please try again later.",
     );
   }
+  */
 }
 
 module.exports = {
@@ -112,13 +111,8 @@ module.exports = {
   data: data,
   async execute(interaction) {
     console.log(
-      `[Wrapped][caller:${interaction.user.displayName}] Used wrapped subcommand '${interaction.options.getSubcommand()}'`,
+      `[Wrapped][caller:${interaction.user.displayName}] Used wrapped`,
     );
-    const subCommand = interaction.options.getSubcommand();
-    if (subCommand === "show") {
-      await show(interaction);
-    } else {
-      await interaction.reply("Unknown command");
-    }
+    await show(interaction);
   },
 };

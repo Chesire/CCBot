@@ -2,8 +2,8 @@ const { Events } = require("discord.js");
 const admindb = require("../../features/admin/data/admindb");
 const adminRepository = require("../../features/admin/data/admin-repository");
 const challengedb = require("../../features/challenge/data/challengedb");
+const eventdb = require("../../core/data/eventdb");
 const shameeventsdb = require("../../features/shame/data/shameeventsdb");
-const wrappeddb = require("../../features/wrapped/data/wrappeddb");
 
 module.exports = {
   name: Events.ClientReady,
@@ -16,13 +16,14 @@ module.exports = {
     await adminRepository.initialize();
 
     console.log(`[ReadyDB] syncing Challenge db`);
-    await challengedb.Challenges.sync();
+    await challengedb.Challenges.sync({ alter: true });
 
     console.log(`[ReadyDB] syncing ShameEvents db`);
-    await shameeventsdb.ShameEvents.sync();
+    await shameeventsdb.ShameEvents.sync({ alter: true });
 
-    console.log(`[ReadyDB] syncing Wrapped db`);
-    await wrappeddb.Wrapped.sync();
+    console.log(`[ReadyDB] syncing Event db`);
+    await eventdb.UserYearEvent.sync({ alter: true });
+    await eventdb.ChannelYearEvent.sync({ alter: true });
 
     console.log("[ReadyDB] dbs Synced!");
   },
