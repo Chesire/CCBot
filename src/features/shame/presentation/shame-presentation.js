@@ -17,7 +17,7 @@ const shamePresentation = {
   },
 
   getUnshamedMessage(userId) {
-    return `<@${userId}>, you are free`;
+    return `Rejoice <@${userId}>, you are free!`;
   },
 
   getNoRoleError() {
