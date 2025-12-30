@@ -44,7 +44,7 @@ async function shame(interaction) {
   // TODO: Move this into a service
   const shamedRoleId = await adminRepository.shamedRoleId.get();
   if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
-    await interaction.reply("No role set");
+    await interaction.reply(shamePresentation.getNoRoleError());
     return;
   }
 
@@ -67,7 +67,7 @@ async function shame(interaction) {
   // TODO: Move this into a service
   await handleEvent(guild, user);
 
-  await interaction.reply(shamePresentation.getShameMessage());
+  await interaction.reply(shamePresentation.getShameMessage(user.id));
 }
 
 async function trackUserMissedChallenge(userId) {
@@ -158,7 +158,7 @@ async function unshame(interaction) {
   if (await shameService.unshameUser(user.id, interaction.guild)) {
     await interaction.reply(shamePresentation.getUnshamedMessage(user.id));
   } else {
-    await interaction.reply("No role set");
+    await interaction.reply(shamePresentation.getNoRoleError());
   }
 }
 

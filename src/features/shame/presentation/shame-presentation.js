@@ -7,12 +7,16 @@ const _shameGifs = [
 ];
 
 const shamePresentation = {
-  getShameMessage() {
+  getShameMessage(userId) {
     const gif = _shameGifs[Math.floor(Math.random() * _shameGifs.length)];
-    return `SHAME <@${user.id}> SHAME\n${gif}`;
+    return `SHAME <@${userId}> SHAME\n${gif}`;
   },
 
   getUnshamedMessage(userId) {
     return `<@${userId}>, you are free`;
+  },
+
+  getNoRoleError() {
+    return "No shamed role has been set.";
   },
 };

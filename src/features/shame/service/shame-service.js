@@ -6,7 +6,7 @@ const shameService = {
    * Returns true if the user was successfully unshamed, false if otherwise
    */
   async unshameUser(userId, guild) {
-    // Consider if we should remove the event if it currently exists
+    // Consider if we should remove the event if it currently exists to make sure its tidied up
     const shameRoleId = await adminRepository.shamedRoleId.get();
     if (adminRepository.shamedRoleId.isDefault(shameRoleId)) {
       return false;
