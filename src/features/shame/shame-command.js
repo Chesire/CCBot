@@ -9,16 +9,9 @@ const {
   eventService,
   USER_EVENT_TYPES,
 } = require("../../core/services/event-service");
+const shamePresentation = require("../shame/presentation/shame-presentation.js");
 
 const weekExtra = 7 * 24 * 60 * 60 * 1000;
-
-const shameGifs = [
-  "https://tenor.com/VU1y.gif",
-  "https://tenor.com/xV7I.gif",
-  "https://tenor.com/bSiK8.gif",
-  "https://tenor.com/bLQnA.gif",
-  "https://tenor.com/uDmFdQcabLN.gif",
-];
 
 const data = new SlashCommandBuilder()
   .setName("shame")
@@ -47,6 +40,7 @@ const data = new SlashCommandBuilder()
   );
 
 async function shame(interaction) {
+  // TODO: Move this into a service
   const shamedRoleId = await adminRepository.shamedRoleId.get();
   if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
     await interaction.reply("No role set");
@@ -62,16 +56,17 @@ async function shame(interaction) {
     (roleCache) => roleCache.id === shamedRoleId,
   );
 
+  // TODO: Move this into a service
   await member.roles.add(role);
 
+  // TODO: Move this into a service
   await trackUserMissedChallenge(user.id);
   await trackUserShamed(isNewlyShamed, user.id);
 
+  // TODO: Move this into a service
   await handleEvent(guild, user);
 
-  const selectedGif = shameGifs[Math.floor(Math.random() * shameGifs.length)];
-
-  await interaction.reply(`SHAME <@${user.id}> SHAME\n${selectedGif}`);
+  await interaction.reply(shamePresentation.getShameMessage());
 }
 
 async function trackUserMissedChallenge(userId) {
@@ -157,6 +152,7 @@ async function createEvent(guild, user) {
 }
 
 async function unshame(interaction) {
+  // TODO: Move this into a service
   const shamedRoleId = await adminRepository.shamedRoleId.get();
   if (adminRepository.shamedRoleId.isDefault(shamedRoleId)) {
     await interaction.reply("No role set");
@@ -168,7 +164,7 @@ async function unshame(interaction) {
   const member = await guild.members.fetch(user.id);
   await member.roles.remove(role);
 
-  await interaction.reply(`<@${user.id}>, you are free`);
+  await interaction.reply(shamePresentation.getUnshamedMessaged(user.id));
 }
 
 module.exports = {
